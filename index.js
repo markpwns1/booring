@@ -31,6 +31,9 @@ let copyLinkButton;
 
 let savedScrollCoords = { x: 0, y: 0 };
 
+let leftHeight = 0;
+let rightHeight = 0;
+
 const cachedSearch = {
     searchTags: [],
     checkTagsInclude: [],
@@ -302,7 +305,7 @@ function search(tags, additive, callback) {
                 populated += filtered.length;
             }
 
-            populateResults(filtered, additive, () => {
+            populateResults(filtered, () => {
                 if(populated < 20) {
                     currentPage++;
                     _search();
@@ -416,56 +419,47 @@ function openPost(post) {
     doTagSection("copyright", post.tag_string_copyright);
 }
 
-function populateResults(data, add = false, callback = null) {
-    let leftHeight = 0;
-    let rightHeight = 0;
+// return the image's height if its width were 100
+function normalisedHeight(post) {
+    return post.image_height / post.image_width;
+}
 
-    if(add) {
-        leftHeight = leftColumn.height();
-        rightHeight = rightColumn.height();
-    }
+function populateResults(data, callback = null) {
 
     let populated = 0;
+    let i = 0;
 
-    function display(i, oncomplete) {
-        // console.log(i + " / " + data.length + " (" + populated + ")");
-        if(i >= data.length) {
-            if(oncomplete) oncomplete();
-            return;
+    function completeImage() {
+        i++;
+        if(i == data.length) {
+            if(callback) callback(populated);
+        }
+    }
+
+    for(const post of data) {
+        const image = $("<img>");
+        const timeout = setTimeout(completeImage, 3000);
+
+        if(leftHeight > rightHeight) {
+            rightColumn.append(image);
+            rightHeight += normalisedHeight(post);
+        } else {
+            leftColumn.append(image);
+            leftHeight += normalisedHeight(post);
         }
 
-        const post = data[i];
-        const image = $("<img>");
-
-        const timeout = setTimeout(() => {
-            display(i + 1, oncomplete);
-        }, 3000);
-
         image.load(() => {
-            if(leftHeight > rightHeight) {
-                rightColumn.append(image);
-                rightHeight += image[0].clientHeight;
-            } else {
-                leftColumn.append(image);
-                leftHeight += image[0].clientHeight;
-            }
-            
             populated++;
             clearTimeout(timeout);
-            display(i + 1, oncomplete);
+            completeImage();
         });
 
         image.on("error", () => {
             clearTimeout(timeout);
-            display(i + 1, oncomplete);
+            completeImage();
         });
 
         image.on("click", () => openPost(post));
-
         image.attr("src", post.preview_file_url);
     }
-    
-    display(0, () => {
-        if(callback) callback(populated);
-    });
 }
