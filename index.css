@@ -1,0 +1,84 @@
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+}
+
+#content {
+    overflow-x: hidden;
+}
+
+#search-box {
+    font-family: monospace;
+    padding: 4px;
+    width: calc(100%);
+    color: black;
+}
+
+#danbooru-post-tags {
+    font-family: monospace;
+}
+
+#danbooru-post-info {
+    margin: 10px;
+}
+
+#results {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: auto;
+}
+
+.column {
+    padding: 0;
+    margin: 0;
+    flex: 50%;
+}
+
+.column img {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    vertical-align: middle;
+    border: 1px solid black;
+    margin: auto;
+}
+
+#more-btn, #loading-message {
+    display: block;
+}
+
+#footer {
+    margin: 10px auto;
+    width: fit-content;
+}
+
+#fullscreen-container {
+    /* display: flex; */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 1;
+    overflow: scroll;
+    /* align-items: center; */
+}
+
+#fullscreen-image {
+    width: 100%;
+    height: auto;
+    margin: auto;
+    display: block;
+}
+
+.content-hidden {
+    /* visibility: hidden; */
+    overflow: hidden;
+}

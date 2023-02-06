@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Booru Client</title>
+        <link rel="stylesheet" href="index.css" />
+    </head>
+    <body>
+        <div id="content">
+            <div id="search">
+                <input type="text" id="search-box" />
+            </div>
+            <div id="results">
+                <div id="column-1" class="column"></div>
+                <div id="column-2" class="column"></div>
+            </div>
+            <div id="footer">
+                <button id="more-btn" hidden>show more</button>
+                <span id="loading-msg" hidden>loading...</span>
+            </div>
+        </div>
+        <div id="fullscreen-container" hidden>
+            <div>
+                <img id="fullscreen-image" /><br>
+            </div>
+            <div id="danbooru-post-info">
+                <h3>Information</h3>
+                <p>
+                    ID: <span id="danbooru-post-id"></span><br>
+                    Filesize: <span id="danbooru-post-filesize"></span><br>
+                    Source: <a id="danbooru-post-source" target="_blank"></a><br> 
+                    Tags: <span id="danbooru-post-tags"></span>
+                </p>
+            </div>
+            
+        </div>
+        <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+        <script src="index.js"></script>
+    </body>
+</html>
