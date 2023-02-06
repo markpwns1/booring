@@ -35,8 +35,8 @@ $(document).ready(function () {
     fullscreenContainer.hide();
 
     function closeFullscreen() {
-        fullscreenContainer.hide();    
         $("body").toggleClass("content-hidden");
+        fullscreenContainer.hide();    
     }
 
     // fullscreenImage.on("click", closeFullscreen);
@@ -73,7 +73,7 @@ $(document).ready(function () {
 
                 data.forEach(x => {
                     const tag = x.label;
-                    const suggestion = $("<a class='suggestion' href='#'></a>");
+                    const suggestion = $("<a class='suggestion' href='javscript:void()'></a>");
                     suggestion.text(tag);
                     suggestion.on("click", function () {
                         searchBox[0].value = (str.substring(0, last + 1) + tag + "\n" + str.substring(selectionStart));
