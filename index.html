@@ -8,8 +8,10 @@
     <body>
         <div id="content">
             <div id="search">
-                <button id="search-btn">search</button>
-                <textarea type="text" id="search-box" placeholder="search here - one tag per line"></textarea>
+                <button id="search-btn">Search</button>
+                <button id="help-btn">Help</button>
+                <span id="help">type below to search - one tag per line!</span>
+                <textarea type="text" id="search-box" placeholder="Search here - one tag per line!"></textarea>
                 <div id="suggestions"></div>
             </div>
             <div id="results">
@@ -17,8 +19,8 @@
                 <div id="column-2" class="column"></div>
             </div>
             <div id="footer">
-                <button id="more-btn" hidden>show more</button>
-                <span id="loading-msg" hidden>loading...</span>
+                <button id="more-btn" hidden>Show More</button>
+                <span id="loading-msg" hidden>Loading...</span>
             </div>
         </div>
         <div id="fullscreen-container" hidden>
@@ -35,7 +37,24 @@
                     Tags: <span id="danbooru-post-tags"></span>
                 </p>
             </div>
-            
+        </div>
+        <div id="help-menu" hidden>
+            <a id="close-help-menu" href="javascript:void()">Close</a>
+            <h3>Help</h3>
+            <ul>
+                <li>
+                    Type the Danbooru tags you want to search into the search box. Make sure to use <strong>one tag per line</strong>. 
+                </li>
+                <li>
+                    Danbooru's limit of 2 tags <strong>does not apply</strong> - you may use as many tags as you want. 
+                </li>
+                <li>
+                    There is an autocomplete, so if you partially type a tag, it will give you suggestions. 
+                </li>
+                <li>
+                    Once the images are loaded, tap/click on any image to view it in full resolution. 
+                </li>
+            </ul>
         </div>
         <script src="jquery.js"></script>
         <script src="index.js"></script>

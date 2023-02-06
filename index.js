@@ -33,6 +33,7 @@ $(document).ready(function () {
 
     moreButton.hide();
     fullscreenContainer.hide();
+    $("#help-menu").hide();
 
     function closeFullscreen() {
         $("body").toggleClass("content-hidden");
@@ -122,6 +123,13 @@ $(document).ready(function () {
         searchBox.removeClass("open");
     });
 
+    $("#help-btn").on("click", function () {
+        $("#help-menu").show();
+    });
+
+    $("#close-help-menu").on("click", function () {
+        $("#help-menu").hide();
+    });
 });
 
 function onFinishedSearch(result) {
