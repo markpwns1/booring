@@ -34,10 +34,13 @@ $(document).ready(function () {
     moreButton.hide();
     fullscreenContainer.hide();
 
-    fullscreenImage.on("click", () => {
+    function closeFullscreen() {
         fullscreenContainer.hide();    
         $("body").toggleClass("content-hidden");
-    });
+    }
+
+    // fullscreenImage.on("click", closeFullscreen);
+    $("#fullscreen-close").on("click", closeFullscreen);
 
     let timer = null;
 
@@ -118,6 +121,7 @@ $(document).ready(function () {
         searchPane.removeClass("open");
         searchBox.removeClass("open");
     });
+
 });
 
 function onFinishedSearch(result) {

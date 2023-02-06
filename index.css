@@ -1,4 +1,5 @@
 
+
 body {
     margin: 0;
     padding: 0;
@@ -13,14 +14,13 @@ body {
 }
 
 #search {
+    width: 100%;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
     background-color: black;
     z-index: 1;
     overflow: hidden;
-    border-bottom: 1px solid white;
 }
 
 #search.open {
@@ -69,6 +69,7 @@ body {
     vertical-align: middle;
     border: 1px solid black;
     margin: auto;
+    cursor: pointer;
 }
 
 #more-btn, #loading-message {
@@ -110,4 +111,21 @@ body {
     display: inline-block;
     text-decoration: none;
     color: white;
+}
+
+@media (min-width: 600px) {
+    #search {
+        width: 500px;
+        margin: auto;
+        left: calc(50% - 250px);
+    }
+    body {
+        width: 500px;
+        margin: auto;
+    }
+    #fullscreen-container {
+        width: 500px;
+        margin: auto;
+        left: calc(50% - 250px);
+    }
 }
