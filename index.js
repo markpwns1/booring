@@ -27,6 +27,7 @@ let danbooruPostFilesize;
 let danbooruPostRating;
 let danbooruPostScore;
 let danbooruPostFavourites;
+let copyLinkButton;
 
 let savedScrollCoords = { x: 0, y: 0 };
 
@@ -76,6 +77,8 @@ $(document).ready(function () {
     danbooruPostScore = $("#danbooru-post-score");
     danbooruPostFavourites = $("#danbooru-post-fav-count");
 
+    copyLinkButton = $("#copy-link");
+
     moreButton.hide();
     fullscreenContainer.hide();
     $("#help-menu").hide();
@@ -117,12 +120,14 @@ $(document).ready(function () {
                 data.forEach(x => {
                     const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category]}' href='#' onclick='return false'></a>`);
                     suggestion.text(x.label);
-                    suggestion.on("click", function () {
+                    suggestion.on("click", function (event) {
                         const i = line.startsWith("-")? 1 : 0;
                         searchBox[0].value = (str.substring(0, currentLineIndex + i) + x.value + "\n" + str.substring(nextLineIndex + 1));
                         searchBox[0].focus();
                         searchBox[0].setSelectionRange(999, 999);
-                        setTimeout(searchBoxKeyUp, 100);
+                        suggestionsPanel.empty();
+                        // setTimeout(searchBoxKeyUp, 100);
+                    
                     });
                     suggestionsPanel.append(suggestion);
                 }); 
@@ -133,10 +138,10 @@ $(document).ready(function () {
     searchBox.on("keyup", searchBoxKeyUp);
     searchBox.on("click", searchBoxKeyUp);
 
-    searchBtn.on("click", function () {
-        const tags = getTags(searchBox.val().trim());
+    function searchString(text, callback) {
+        const tags = getTags(text.trim());
         suggestionsPanel.empty();
-        // console.log(tags);
+        
         if (lastSearch && tags.length == lastSearch.length && tags.every(v => lastSearch.includes(v))) {
             document.activeElement.blur();
             return;
@@ -144,8 +149,15 @@ $(document).ready(function () {
 
         lastSearch = tags;
         currentPage = 1;
-        searchButtonClicked(tags, false, onFinishedSearch);
+        searchButtonClicked(tags, false, x => {
+            onFinishedSearch(x);
+            if(callback) callback()
+        });
         document.activeElement.blur();
+    }
+
+    searchBtn.on("click", function () {
+        searchString(searchBox.val());
     });
 
     moreButton.on("click", function () {
@@ -171,6 +183,21 @@ $(document).ready(function () {
     $("#close-help-menu").on("click", function () {
         $("#help-menu").hide();
     });
+
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(urlSearchParams.entries());
+    if(params.q) {
+        const search = params.q.replace(/,/g, "\n");
+        searchBox.val(search);
+        let callback;
+        if(/id:[0-9]+/gi.test(search)) {
+            callback = () => {
+                // console.log("CLICKING")
+                $("img").trigger("click");  
+            };
+        }
+        searchString(search, callback);
+    }
 });
 
 function onFinishedSearch(result) {
@@ -326,114 +353,6 @@ function search(tags, additive, callback) {
     }
 }
 
-// function searchImages(tags, additive, callback) {
-//     if(tags.length == 0) return;
-    
-//     if(!additive) {
-//         leftColumn.empty();
-//         rightColumn.empty();
-//     }
-
-//     const old_callback = callback;
-//     callback = (x) => {
-//         if(x.reachedEnd) {
-//             loadingMessage.text("No more images found.");
-//         } else {
-//             moreButton.show();
-//             loadingMessage.hide();
-//         }
-//         if (old_callback) old_callback(x);
-//     }
-
-//     moreButton.hide();
-//     loadingMessage.text("loading...");
-//     loadingMessage.show();
-
-//     if(tags.length > 2) {
-//         $.getJSON(TAG_URL + tags.join(","), function(tags) {
-//             const sorted = Array.from(tags).sort((a, b) => a.post_count - b.post_count);
-//             const twoLeastPopular = sorted.slice(0, 2);
-//             const rest = sorted.slice(2);
-
-//             const searchValue = twoLeastPopular.map(x => x.name).join(" ");
-            
-//             let numberFound = 0;
-//             let tries = 0;
-
-//             const search = () => {
-//                 const searchUrl = API_URL + searchValue + "&limit=" + (tags.length * 20) + "&page=" + currentPage;
-            
-//                 $.getJSON(searchUrl, function (data) {
-//                     if(data.length == 0) {
-//                         if(callback) callback({
-//                             found: numberFound,
-//                             reachedEnd: true
-//                         });
-//                         return;
-//                     }
-
-//                     const filtered = data.filter(post => {
-//                         const postTags = post.tag_string.split(" ");
-//                         return rest.every(tag => postTags.includes(tag.name));
-//                     });
-
-//                     if(filtered.length == 0) {
-//                         tries++;
-//                         if(tries < 5) {
-//                             currentPage++;
-//                             search();
-//                         }
-//                         return;
-//                     }
-//                     else {
-//                         tries = 0;
-//                         numberFound += filtered.length;
-//                     }
-
-//                     populateResults(filtered, additive, () => {
-//                         if(numberFound < 20) {
-//                             currentPage++;
-//                             search();
-//                         }
-//                         else {
-//                             if(callback) callback({
-//                                 found: numberFound,
-//                                 reachedEnd: false
-//                             });
-//                         }
-//                     });
-//                 }).fail(reportError);
-//             }
-
-//             search();
-
-//         }).fail(reportError);
-//     }
-//     else {
-//         const searchValue = tags.join(" ");
-//         const searchUrl = API_URL + searchValue + "&page=" + currentPage;
-
-//         $.getJSON(searchUrl, function (data) {
-//             if(data.length == 0) {
-//                 if(callback) {
-//                     callback({
-//                         found: 0,
-//                         reachedEnd: true
-//                     });
-//                 }
-//                 return;
-//             }
-
-//             populateResults(data, additive, found => {
-//                 if(callback) callback({
-//                     found: found,
-//                     reachedEnd: false
-//                 });
-//             });
-//         }).fail(reportError);
-//     }
-// }
-
 const formatTag = x => x.trim();
 
 function getTags(textboxContent) {
@@ -467,6 +386,7 @@ function doTagSection(name, tagString) {
 }
 
 function openPost(post) {
+    suggestionsPanel.empty();
     savedScrollCoords = { x: window.scrollX, y: window.scrollY };
     appContent.hide();
     fullscreenContainer.show();
@@ -482,6 +402,13 @@ function openPost(post) {
     danbooruPostRating.text(RATINGS_TO_STRING[post.rating]);
     danbooruPostScore.text(post.score);
     danbooruPostFavourites.text(post.fav_count);
+    copyLinkButton.on("click", () => {
+        const link = location.protocol + '//' + location.host + location.pathname + "?q=id:" + post.id;
+        navigator.clipboard.writeText(link).then(() => {
+            copyLinkButton.text("copied");
+            setTimeout(() => copyLinkButton.text("(copy link)"), 1000);
+        });
+    });
     doTagSection("artist", post.tag_string_artist);
     doTagSection("character", post.tag_string_character);
     doTagSection("general", post.tag_string_general);
