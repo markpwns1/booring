@@ -1,5 +1,6 @@
 const API_URL = "https://danbooru.donmai.us/posts.json?tags=";
 const TAG_URL = "https://danbooru.donmai.us/tags.json?search[name_comma]=";
+const AUTOCOMPLETE_URL = "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=";
 
 let currentPage = 0;
 
@@ -12,6 +13,9 @@ let fullscreenContainer;
 let fullscreenImage;
 let appContent;
 let lastSearch;
+let searchPane;
+let searchBtn;
+let suggestionsPanel;
 
 $(document).ready(function () {
 
@@ -23,6 +27,9 @@ $(document).ready(function () {
     fullscreenContainer = $("#fullscreen-container");
     fullscreenImage = $("#fullscreen-image");
     appContent = $("#content");
+    searchPane = $("#search");
+    searchBtn = $("#search-btn");
+    suggestionsPanel = $("#suggestions");
 
     moreButton.hide();
     fullscreenContainer.hide();
@@ -32,10 +39,65 @@ $(document).ready(function () {
         $("body").toggleClass("content-hidden");
     });
 
-    searchBox.on("keyup", function (event) {
-        if(event.keyCode != 13) return;
+    let timer = null;
 
-        const tags = getTags($(this).val());
+    function searchBoxKeyUp(event) {
+        suggestionsPanel.empty();
+        clearTimeout(timer);
+        const str = searchBox.val();
+        const selectionStart = this.selectionStart;
+        let last;
+        const regex = /\n/g;
+        while (true) {
+            const match = regex.exec(str);
+            if(!match || match.index >= selectionStart || match.index == -1) {
+                break;
+            }
+            last = match.index == -1? 0 : match.index;
+        }
+        const segment = str.substring(last, selectionStart).trim();
+
+        if(segment.length == 0) {
+            return;
+        }
+
+        timer = setTimeout(() => {
+            $.getJSON(AUTOCOMPLETE_URL + formatTag(segment), function (data) {
+
+                if(data.length == 0) {
+                    return;
+                }
+
+                data.forEach(x => {
+                    const tag = x.label;
+                    const suggestion = $("<a class='suggestion' href='#'></a>");
+                    suggestion.text(tag);
+                    suggestion.on("click", function () {
+                        searchBox[0].value = (str.substring(0, last + 1) + tag + "\n" + str.substring(selectionStart));
+                        // suggestionsPanel.hide();
+                        // setTimeout(function() {
+                            searchBox[0].focus();
+                            searchBox[0].setSelectionRange(999, 999);
+                        // }, 100);
+                        setTimeout(searchBoxKeyUp, 100);
+                    });
+                    suggestionsPanel.append(suggestion);
+                }); 
+            }).fail(reportError);
+        }, 500);
+    }
+
+    searchBox.on("keyup", searchBoxKeyUp);
+
+    searchBtn.on("click", function () {
+        const tags = getTags(searchBox.val().trim());
+        suggestionsPanel.empty();
+        // console.log(tags);
+        if (lastSearch && tags.length == lastSearch.length && tags.every(v => lastSearch.includes(v))) {
+            document.activeElement.blur();
+            return;
+        }
+
         lastSearch = tags;
         currentPage = 1;
         searchImages(tags, false, onFinishedSearch);
@@ -45,6 +107,16 @@ $(document).ready(function () {
     moreButton.on("click", function () {
         currentPage++;
         searchImages(lastSearch, true, onFinishedSearch);
+    });
+
+    searchPane.on("focusin", function () {
+        searchPane.addClass("open");
+        searchBox.addClass("open");
+    });
+
+    searchPane.on("focusout", function () {
+        searchPane.removeClass("open");
+        searchBox.removeClass("open");
     });
 });
 
@@ -141,7 +213,7 @@ function searchImages(tags, additive, callback) {
         }).fail(reportError);
     }
     else {
-        const searchValue = tags.join("%20");
+        const searchValue = tags.join(" ");
         const searchUrl = API_URL + searchValue + "&page=" + currentPage;
 
         $.getJSON(searchUrl, function (data) {
@@ -165,8 +237,10 @@ function searchImages(tags, additive, callback) {
     }
 }
 
+const formatTag = x => x.trim().replace(/ /gi, "_");
+
 function getTags(textboxContent) {
-    return textboxContent.trim().split(",").map(x => x.trim().replace(/ /gi, "_"));
+    return textboxContent.trim().split("\n").map(formatTag);
 }
 
 function reportError(err) {
