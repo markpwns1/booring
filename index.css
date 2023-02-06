@@ -32,7 +32,8 @@ body {
 }
 
 #search.open {
-    overflow: scroll;
+    overflow-x: hidden;
+    overflow-y: scroll;
     /* height: 100%; */
 }
 
