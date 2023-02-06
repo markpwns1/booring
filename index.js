@@ -2,6 +2,8 @@ const API_URL = "https://danbooru.donmai.us/posts.json?tags=";
 const TAG_URL = "https://danbooru.donmai.us/tags.json?search[name_comma]=";
 const AUTOCOMPLETE_URL = "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=";
 
+const CATEGORIES = [ "general", "artist", "", "copyright", "character", "meta" ];
+
 let currentPage = 0;
 
 let searchBox;
@@ -25,7 +27,6 @@ let danbooruPostFilesize;
 let danbooruPostRating;
 let danbooruPostScore;
 let danbooruPostFavourites;
-
 
 let savedScrollCoords = { x: 0, y: 0 };
 
@@ -114,7 +115,7 @@ $(document).ready(function () {
                 }
 
                 data.forEach(x => {
-                    const suggestion = $("<a class='suggestion' href='#' onclick='return false'></a>");
+                    const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category]}' href='#' onclick='return false'></a>`);
                     suggestion.text(x.label);
                     suggestion.on("click", function () {
                         const i = line.startsWith("-")? 1 : 0;
@@ -160,7 +161,7 @@ $(document).ready(function () {
     searchPane.on("focusout", function () {
         searchPane.removeClass("open");
         searchBox.removeClass("open");
-        suggestionsPanel.empty();
+        // suggestionsPanel.empty();
     });
 
     $("#help-btn").on("click", function () {
