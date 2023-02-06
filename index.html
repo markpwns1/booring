@@ -11,7 +11,11 @@
                 <button id="search-btn">Search</button>
                 <button id="help-btn">Help</button>
                 <span id="help">type below to search - one tag per line!</span>
-                <textarea type="text" id="search-box" placeholder="Search here - one tag per line!"></textarea>
+                <textarea type="text" id="search-box" spellcheck="false">rating:g
+aether_(genshin_impact)
+lumine_(genshin_impact)
+kimono
+-venti_(genshin_impact)</textarea>
                 <div id="suggestions"></div>
             </div>
             <div id="results">
@@ -31,11 +35,34 @@
                 <a href="#" onclick="return false" id="fullscreen-close">Back</a>
                 <h3>Information</h3>
                 <p>
-                    ID: <span id="danbooru-post-id"></span><br>
-                    Filesize: <span id="danbooru-post-filesize"></span><br>
+                    ID: <span id="danbooru-post-id"></span> <a id="danbooru-open-post">(open post)</a><br>
+                    Date: <span id="danbooru-post-date"></span><br>
+                    Size: <a id="danbooru-post-filesize"></a><br>
                     Source: <a id="danbooru-post-source" target="_blank"></a><br> 
-                    Tags: <span id="danbooru-post-tags"></span>
+                    Rating: <span id="danbooru-post-rating"></span><br>
+                    Score: <span id="danbooru-post-score"></span><br>
+                    Favourites: <span id="danbooru-post-fav-count"></span><br>
                 </p>
+                <div id="danbooru-artist-section">
+                    <h4>Artist</h4>
+                    <span id="danbooru-artist-tags" class="taglist"></span>
+                </div>
+                <div id="danbooru-copyright-section">
+                    <h4>Copyright</h4>
+                    <span id="danbooru-copyright-tags" class="taglist"></span>
+                </div>
+                <div id="danbooru-character-section">
+                    <h4>Characters</h4>
+                    <span id="danbooru-character-tags" class="taglist"></span>
+                </div>
+                <div id="danbooru-general-section">
+                    <h4>General</h4>
+                    <span id="danbooru-general-tags" class="taglist"></span>
+                </div>
+                <div id="danbooru-meta-section">
+                    <h4>Meta</h4>
+                    <span id="danbooru-meta-tags" class="taglist"></span>
+                </div>
             </div>
         </div>
         <div id="help-menu" hidden>

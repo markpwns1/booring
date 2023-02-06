@@ -1,4 +1,8 @@
 
+h3, h4 {
+    margin-top: 10px;
+    margin-bottom: 3px;
+}
 
 a {
     color: white;
@@ -29,7 +33,7 @@ body {
 
 #search.open {
     overflow: scroll;
-    height: 100%;
+    /* height: 100%; */
 }
 
 #search-box {
@@ -38,18 +42,25 @@ body {
     width: 100%;
     height: 20px;
     color: black;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: scroll;
 }
 
 #search-box.open {
     height: 150px;
 }
 
-#danbooru-post-tags {
+.taglist {
     font-family: monospace;
 }
 
 #danbooru-post-info {
     margin: 10px;
+}
+
+#suggestions {
+    margin-bottom: 5px;
 }
 
 #results {
