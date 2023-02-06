@@ -150,8 +150,11 @@ $(document).ready(function () {
             return;
         }
 
+        leftHeight = 0;
+        rightHeight = 0;
         lastSearch = tags;
         currentPage = 1;
+        
         searchButtonClicked(tags, false, x => {
             onFinishedSearch(x);
             if(callback) callback()
