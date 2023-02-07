@@ -11,8 +11,6 @@ let leftColumn;
 let rightColumn;
 let moreButton;
 let loadingMessage;
-let fullscreenContainer;
-let fullscreenImage;
 let appContent;
 let lastSearch;
 let searchPane;
@@ -28,6 +26,14 @@ let danbooruPostRating;
 let danbooruPostScore;
 let danbooruPostFavourites;
 let copyLinkButton;
+
+let fullscreenContainer;
+let fullscreenImage;
+let fullscreenVideo;
+let fullscreenVideoSrc;
+
+let downscaleWarning;
+let viewOriginal;
 
 let savedScrollCoords = { x: 0, y: 0 };
 
@@ -66,6 +72,8 @@ $(document).ready(function () {
     loadingMessage = $("#loading-msg");
     fullscreenContainer = $("#fullscreen-container");
     fullscreenImage = $("#fullscreen-image");
+    fullscreenVideo = $("#fullscreen-video");
+    fullscreenVideoSrc = $("#fullscreen-video-src");
     appContent = $("#content");
     searchPane = $("#search");
     searchBtn = $("#search-btn");
@@ -80,6 +88,9 @@ $(document).ready(function () {
     danbooruPostScore = $("#danbooru-post-score");
     danbooruPostFavourites = $("#danbooru-post-fav-count");
 
+    downscaleWarning = $("#downscale-warning");
+    viewOriginal = $("#view-original");
+
     copyLinkButton = $("#copy-link");
 
     moreButton.hide();
@@ -90,7 +101,9 @@ $(document).ready(function () {
         // $("body").toggleClass("content-hidden");
         appContent.show();
         fullscreenContainer.hide();
+        fullscreenImage.off("load");
         fullscreenImage.attr("src", "");
+        fullscreenVideoSrc.attr("src", "");
         window.scrollTo(savedScrollCoords.x, savedScrollCoords.y);
     }
 
@@ -154,7 +167,7 @@ $(document).ready(function () {
         rightHeight = 0;
         lastSearch = tags;
         currentPage = 1;
-        
+
         searchButtonClicked(tags, false, x => {
             onFinishedSearch(x);
             if(callback) callback()
@@ -188,6 +201,11 @@ $(document).ready(function () {
 
     $("#close-help-menu").on("click", function () {
         $("#help-menu").hide();
+    });
+
+    fullscreenVideo.on("loadeddata", function() {
+        fullscreenImage.hide();
+        fullscreenVideo.show();
     });
 
     const urlSearchParams = new URLSearchParams(window.location.search);
@@ -392,17 +410,46 @@ function doTagSection(name, tagString) {
 }
 
 function openPost(post) {
+
     suggestionsPanel.empty();
     savedScrollCoords = { x: window.scrollX, y: window.scrollY };
+
     appContent.hide();
-    fullscreenContainer.show();
+
+    fullscreenImage.show();
     fullscreenImage.attr("src", post.preview_file_url);
-    fullscreenImage.attr("src", post.file_url);
+
+    fullscreenContainer.show();
+    fullscreenContainer.scrollTop(0);
+
+    if(post.file_ext == "mp4" || post.file_ext == "webm") {
+        fullscreenVideo.show();
+        fullscreenVideoSrc.attr("src", post.large_file_url);
+        fullscreenVideoSrc.attr("type", "video/" + post.file_ext);
+        fullscreenVideo[0].load();
+    }
+    else {
+        fullscreenVideo.hide();
+        fullscreenVideoSrc.attr("src", "");
+
+        fullscreenImage.attr("src", post.large_file_url);
+        fullscreenImage.on("load", function() {
+            const downscaleRatio = fullscreenImage[0].naturalHeight / post.image_height;
+            if(downscaleRatio < 1.0) {
+                downscaleWarning.show();
+                downscaleWarning.text("Resized to " + Math.round(downscaleRatio * 100) + "% of original");
+            }
+            else {
+                downscaleWarning.hide();
+            }
+        });
+    }
+
+    viewOriginal.attr("href", post.file_url);
     danbooruPostID.text(post.id);
     danbooruOpenPost.attr("href", "https://danbooru.donmai.us/posts/" + post.id);
     danbooruPostDate.text(post.created_at.slice(0, 10));
     danbooruPostFilesize.text(Math.round(post.file_size / 1000) + " KB (" + post.image_width + "x" + post.image_height + ")");
-    danbooruPostFilesize.attr("href", post.file_url);
     danbooruPostSource.text(post.source);
     danbooruPostSource.attr("href", post.source);
     danbooruPostRating.text(RATINGS_TO_STRING[post.rating]);

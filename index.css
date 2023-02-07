@@ -60,6 +60,12 @@ body {
     margin: 10px;
 }
 
+#downscale-warning, #view-original {
+    font-size: 12px;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
 #suggestions {
     margin-bottom: 5px;
 }
@@ -110,7 +116,7 @@ body {
     /* align-items: center; */
 }
 
-#fullscreen-image {
+.fullscreen-content {
     width: 100%;
     height: auto;
     margin: auto;
