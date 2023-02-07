@@ -416,6 +416,7 @@ function openPost(post) {
 
     appContent.hide();
 
+    fullscreenVideo.hide();
     fullscreenImage.show();
     fullscreenImage.attr("src", post.preview_file_url);
 
@@ -423,13 +424,11 @@ function openPost(post) {
     fullscreenContainer.scrollTop(0);
 
     if(post.file_ext == "mp4" || post.file_ext == "webm") {
-        fullscreenVideo.show();
         fullscreenVideoSrc.attr("src", post.large_file_url);
         fullscreenVideoSrc.attr("type", "video/" + post.file_ext);
         fullscreenVideo[0].load();
     }
     else {
-        fullscreenVideo.hide();
         fullscreenVideoSrc.attr("src", "");
 
         fullscreenImage.attr("src", post.large_file_url);
