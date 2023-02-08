@@ -1,8 +1,101 @@
-const API_URL = "https://danbooru.donmai.us/posts.json?tags=";
-const TAG_URL = "https://danbooru.donmai.us/tags.json?search[name_comma]=";
-const AUTOCOMPLETE_URL = "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=";
 
 const CATEGORIES = [ "general", "artist", "", "copyright", "character", "meta" ];
+
+const ONE_DAY_MS = 86400000;
+
+const DOMAINS = {
+    danbooru: {
+        postPrefix: "https://danbooru.donmai.us/posts/",
+        searchUrl: "https://danbooru.donmai.us/posts.json?tags=",
+        tagUrl: "https://danbooru.donmai.us/tags.json?search[name_comma]=",
+        suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]=",
+        ratingMappings: { 
+            "safe": "general",
+        },
+        ratingsToString: {
+            "g": "General",
+            "s": "Sensitive",
+            "q": "Questionable",
+            "e": "Explicit"
+        },
+        postMappings: { },
+        suggestionMappings: { 
+            "value": "name"
+        },
+        tagCache: [ ],
+        downloadTags: callback => {
+            requestSequence([
+                // top 200 artists
+                "0:https://danbooru.donmai.us/tags.json?limit=200&only=name,post_count,category&search[category]=1&search[order]=count",
+                // top 500 meta tags
+                "1:https://danbooru.donmai.us/tags.json?limit=500&only=name,post_count,category&search[category]=5&search[order]=count",
+                // top 750 copyright tags
+                "2:https://danbooru.donmai.us/tags.json?limit=750&only=name,post_count,category&search[category]=3&search[order]=count",
+                // get all characters with 500+ posts
+                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>2000",
+                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>1000..2000",
+                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>500..999",
+                // get all general tags with 10K+ posts
+                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=25000",
+                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=10000..25000",
+                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=5000..9999",
+            ], results => {
+                const interleaved = interleaveArrays(results);
+                callback(interleaved);
+            });
+        }
+    },
+    yandere: {
+        postPrefix: "https://yande.re/post/show/",
+        searchUrl: "https://yande.re/post.json?tags=",
+        tagUrl: undefined,
+        // temporarily use danboory suggestions
+        suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=",
+        // suggestionsUrl: "https://yande.re/tag.json?limit=10&order=count&name_pattern=",
+        ratingMappings: {
+            "g": "s",
+            "general": "safe",
+            "s": "safe",
+            "sensitive": "safe",
+            "q": "questionable",
+            "questionable": "questionable",
+            "e": "questionable",
+            "explicit": "questionable",
+        },
+        ratingsToString: {
+            "s": "Safe",
+            "q": "Questionable"
+        },
+        postMappings: {
+            "preview_url": "preview_file_url",
+            "sample_url": "large_file_url",
+            "jpeg_width": "image_width",
+            "jpeg_height": "image_height",
+            "tags": [ "tag_string", "tag_string_general" ],
+        },
+        // temporarily use danbooru suggestions
+        suggestionMappings: {
+            "type": "category"
+        },
+        tagCache: [ ],
+        downloadTags: callback => {
+            $.getJSON("https://yande.re/tag/summary.json", data => {
+                const tags = data.data.split(" ").filter(x => x != "").map(x => {
+                    const parts = x.split("`");
+                    if(!parts[1]) console.log(x)
+                    return {
+                        category: parseInt(parts[0]),
+                        name: parts[1].trim(),
+                        post_count: -1
+                    }
+                });
+                callback(tags);
+            }).fail(() => {
+                callback([]);
+            });
+        }
+    }
+}
 
 let currentPage = 0;
 
@@ -15,6 +108,7 @@ let appContent;
 let lastSearch;
 let searchPane;
 let searchBtn;
+let domainSelect;
 let suggestionsPanel;
 
 let danbooruPostID;
@@ -36,6 +130,7 @@ let downscaleWarning;
 let viewOriginal;
 
 let savedScrollCoords = { x: 0, y: 0 };
+let currentDomain = "danbooru";
 
 let leftHeight = 0;
 let rightHeight = 0;
@@ -47,6 +142,65 @@ const cachedSearch = {
 };
 
 const metaTagSymbolRegex = new RegExp(/:|-/g);
+
+function requestSequence(urls, callback, acc) {
+    if (urls.length === 0) {
+        callback(acc);
+        return;
+    }
+    const url = urls[0];
+    const index = parseInt(url[0]);
+    const rest = url.slice(2);
+    $.getJSON(rest, function (data) {
+        if (!acc) acc = [];
+        const found = acc[index];
+        if (found) {
+            found.push.apply(found, data);
+        }
+        else {
+            acc[index] = data;
+        }
+        requestSequence(urls.slice(1), callback, acc);
+    }).fail(() => {
+        requestSequence(urls.slice(1), callback, acc);
+    });
+}
+
+function interleaveArrays(arrays) {
+    let result = [];
+    let i = 0;
+    while (true) {
+        let allEmpty = true;
+        for (let j = 0; j < arrays.length; j++) {
+            if (arrays[j].length > i) {
+                result.push(arrays[j][i]);
+                allEmpty = false;
+            }
+        }
+        if (allEmpty) {
+            break;
+        }
+        i++;
+    }
+    return result;
+}
+
+function mapObject(obj, mappings) {
+    for (const from of Object.keys(mappings)) {
+        if (obj.hasOwnProperty(from)) {
+            const to = mappings[from];
+            if(typeof to === "string") {
+                obj[to] = obj[from];
+            }
+            else {
+                for(let i = 0; i < to.length; i++) {
+                    obj[to[i]] = obj[from];
+                }
+            }
+        }
+    }
+}
+
 
 function lastIndexOfRegex(str, regex, lowerBound, upperBound) {
     let lastIndex = -1;
@@ -77,6 +231,7 @@ $(document).ready(function () {
     appContent = $("#content");
     searchPane = $("#search");
     searchBtn = $("#search-btn");
+    domainSelect = $("#domain-select");
     suggestionsPanel = $("#suggestions");
 
     danbooruPostID = $("#danbooru-post-id");
@@ -90,6 +245,8 @@ $(document).ready(function () {
 
     downscaleWarning = $("#downscale-warning");
     viewOriginal = $("#view-original");
+
+    domainSelect = $("#domain-select");
 
     copyLinkButton = $("#copy-link");
 
@@ -126,29 +283,44 @@ $(document).ready(function () {
             return;
         }
 
+        function addSuggestion(x) {
+            const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category]}' href='#' onclick='return false'></a>`);
+            suggestion.text(x.name);
+            suggestion.on("click", function () {
+                const i = line.startsWith("-")? 1 : 0;
+                searchBox[0].value = (str.substring(0, currentLineIndex + i) + x.name + "\n" + str.substring(nextLineIndex + 1));
+                searchBox[0].focus();
+                searchBox[0].setSelectionRange(999, 999);
+                suggestionsPanel.empty();
+            });
+            suggestionsPanel.append(suggestion);
+        }
+
+        const prefix = line.startsWith("-")? line.slice(1).trim() : line;
+        const filterFunc = currentDomain == "yandere"? (x => x.name.indexOf(prefix) !== -1) : (x => x.name.indexOf(prefix) === 0);
+        const cached = filterLimit(DOMAINS[currentDomain].tagCache, filterFunc, 10);
+        cached.forEach(addSuggestion);
+
+        if(currentDomain == "yandere") return;
+
         timer = setTimeout(() => {
-            $.getJSON(AUTOCOMPLETE_URL + formatTag(line), function (data) {
+            $.getJSON(DOMAINS[currentDomain].suggestionsUrl + formatTag(line), function (data) {
 
                 if(data.length == 0) {
                     return;
                 }
 
+                // const existing = suggestionsPanel.find("a").get().map(x => x.innerText);
+                // console.log(existing);
                 data.forEach(x => {
-                    const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category]}' href='#' onclick='return false'></a>`);
-                    suggestion.text(x.label);
-                    suggestion.on("click", function (event) {
-                        const i = line.startsWith("-")? 1 : 0;
-                        searchBox[0].value = (str.substring(0, currentLineIndex + i) + x.value + "\n" + str.substring(nextLineIndex + 1));
-                        searchBox[0].focus();
-                        searchBox[0].setSelectionRange(999, 999);
-                        suggestionsPanel.empty();
-                        // setTimeout(searchBoxKeyUp, 100);
-                    
-                    });
-                    suggestionsPanel.append(suggestion);
+                    mapObject(x, DOMAINS[currentDomain].suggestionMappings);
+                    if(!cached.some(y => y.name == x.name)) {
+                        DOMAINS[currentDomain].tagCache.push(x);
+                        addSuggestion(x);
+                    }
                 }); 
             }).fail(reportError);
-        }, 500);
+        }, 1000);
     }
 
     searchBox.on("keyup", searchBoxKeyUp);
@@ -195,12 +367,22 @@ $(document).ready(function () {
         // suggestionsPanel.empty();
     });
 
+    domainSelect.on("change", function () {
+        currentDomain = domainSelect.val();
+        checkTagCache(currentDomain);
+    });
+
     $("#help-btn").on("click", function () {
         $("#help-menu").show();
     });
 
     $("#close-help-menu").on("click", function () {
         $("#help-menu").hide();
+    });
+
+    $("#clear-cached-tags").on("click", function () {
+        localStorage.clear();
+        $(this).text("Cleared");
     });
 
     fullscreenVideo.on("loadeddata", function() {
@@ -216,13 +398,51 @@ $(document).ready(function () {
         let callback;
         if(/id:[0-9]+/gi.test(search)) {
             callback = () => {
-                // console.log("CLICKING")
                 $("img").trigger("click");  
             };
         }
         searchString(search, callback);
     }
+
+    currentDomain = domainSelect.val();
+    checkTagCache(currentDomain);
 });
+
+function checkTagCache(domain) {
+    const lastUpdated = localStorage.getItem("tag-cache-last-update-" + domain);
+    const now = Date.now();
+    if(lastUpdated == null || now - lastUpdated > ONE_DAY_MS) {
+        console.log("UPDATING TAG CACHE");
+        DOMAINS[domain].downloadTags(tags => {
+            mapObject(tags, DOMAINS[domain].suggestionMappings);
+            saveTagCache("danbooru", tags);
+            DOMAINS[domain].tagCache = tags;
+            console.log("DONE");
+        });
+    }
+    else {
+        console.log("USING OLD TAG CACHE");
+        DOMAINS[domain].tagCache = loadTagCache(domain);
+    }
+}
+
+function loadTagCache(domain) {
+    const cache = localStorage.getItem("tag-cache-" + domain);
+    return cache.split(";").map(x => {
+        const parts = x.split(",");
+        return {
+            name: parts[0],
+            category: parts[1],
+            post_count: parts[2]
+        };
+    });
+}
+
+function saveTagCache(domain, tags) {
+    const cache = tags.map(x => `${x.name},${x.category},${x.post_count}`).join(";");
+    localStorage.setItem("tag-cache-" + domain, cache);
+    localStorage.setItem("tag-cache-last-update-" + domain, Date.now());
+}
 
 function onFinishedSearch(result) {
     if(result.reachedEnd) {
@@ -287,6 +507,19 @@ function searchButtonClicked(tags, additive, callback) {
     });
 }
 
+function filterLimit(array, f, limit) {
+    const result = [];
+    for(const x of array) {
+        if(f(x)) {
+            result.push(x);
+            if(result.length >= limit) {
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 function search(tags, additive, callback) {
     if(tags.length == 0) return;
     
@@ -294,10 +527,9 @@ function search(tags, additive, callback) {
     let tries = 0;
     
     const _search = () => {
-        // console.log(cachedSearch);
         const limit = cachedSearch.checkTagsInclude.length > 0 
             || cachedSearch.checkTagsExclude.length > 0 ? cachedSearch.searchTags.length * 20 : 20;
-        const searchUrl = API_URL + cachedSearch.searchTags.join(" ") + "&limit=" + limit + "&page=";
+        const searchUrl = DOMAINS[currentDomain].searchUrl + cachedSearch.searchTags.join(" ") + "&limit=" + limit + "&page=";
         $.getJSON(searchUrl + currentPage, function (data) {
             if(data.length == 0) {
                 if(callback) callback({
@@ -306,6 +538,8 @@ function search(tags, additive, callback) {
                 });
                 return;
             }
+
+            data.forEach(x => { mapObject(x, DOMAINS[currentDomain].postMappings) });
 
             const filtered = data.filter(post => {
                 const postTags = post.tag_string.split(" ");
@@ -338,7 +572,7 @@ function search(tags, additive, callback) {
                     });
                 }
             });
-        });
+        }).fail(reportError);
     }
 
     if(additive) {
@@ -348,7 +582,7 @@ function search(tags, additive, callback) {
 
     const tagTypes = sortTags(tags);
 
-    if(tagTypes.taxedTags.length + tagTypes.negatedTags.length < 3) {
+    if(currentDomain == "yandere" || tagTypes.taxedTags.length + tagTypes.negatedTags.length < 3) {
         cachedSearch.searchTags = [ ...tagTypes.taxedTags, ...tagTypes.negatedTags.map(x => "-" + x), ...tagTypes.freeTags ];
         cachedSearch.checkTagsInclude = [];
         cachedSearch.checkTagsExclude = [];
@@ -357,7 +591,7 @@ function search(tags, additive, callback) {
     else {
         const allTaxedTags = Array.from(new Set([ ...tagTypes.taxedTags, ...tagTypes.negatedTags ]));
 
-        $.getJSON(TAG_URL + allTaxedTags.join(","), function(tagsInfo) {
+        $.getJSON(DOMAINS[currentDomain].tagUrl + allTaxedTags.join(","), function(tagsInfo) {
             const includeTagInfo = tagsInfo.filter(x => tagTypes.taxedTags.includes(x.name));
             const excludeTagInfo = tagsInfo.filter(x => tagTypes.negatedTags.includes(x.name));
 
@@ -392,15 +626,8 @@ function reportError(err) {
     }
 }
 
-const RATINGS_TO_STRING = {
-    "g": "General",
-    "s": "Sensitive",
-    "q": "Questionable",
-    "e": "Explicit"
-}
-
 function doTagSection(name, tagString) {
-    if(tagString.length == 0) {
+    if(!tagString || tagString.length == 0) {
         $(`#danbooru-${name}-section`).hide();
     }
     else {
@@ -446,14 +673,14 @@ function openPost(post) {
 
     viewOriginal.attr("href", post.file_url);
     danbooruPostID.text(post.id);
-    danbooruOpenPost.attr("href", "https://danbooru.donmai.us/posts/" + post.id);
+    danbooruOpenPost.attr("href", DOMAINS[currentDomain].postPrefix + post.id);
     danbooruPostDate.text(post.created_at.slice(0, 10));
     danbooruPostFilesize.text(Math.round(post.file_size / 1000) + " KB (" + post.image_width + "x" + post.image_height + ")");
-    danbooruPostSource.text(post.source);
+    danbooruPostSource.text(post.source || "Unknown");
     danbooruPostSource.attr("href", post.source);
-    danbooruPostRating.text(RATINGS_TO_STRING[post.rating]);
+    danbooruPostRating.text(DOMAINS[currentDomain].ratingsToString[post.rating] || post.rating);
     danbooruPostScore.text(post.score);
-    danbooruPostFavourites.text(post.fav_count);
+    danbooruPostFavourites.text(post.fav_count || "N/A");
     copyLinkButton.on("click", () => {
         const link = location.protocol + '//' + location.host + location.pathname + "?q=id:" + post.id;
         navigator.clipboard.writeText(link).then(() => {
@@ -486,6 +713,10 @@ function populateResults(data, callback = null) {
     }
 
     for(const post of data) {
+        if(currentDomain == "yandere") {
+            post.created_at = new Date(post.created_at).toISOString();
+        }
+
         const image = $("<img>");
         const timeout = setTimeout(completeImage, 3000);
 

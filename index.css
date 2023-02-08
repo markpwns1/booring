@@ -24,6 +24,7 @@ body {
 #search {
     width: 100%;
     position: fixed;
+    padding-top: 3px;
     top: 0;
     left: 0;
     background-color: black;
@@ -183,6 +184,10 @@ body {
     margin: auto;
 }
 
+#clear-cached-tags {
+    float: right;
+}
+
 @media (min-width: 600px) {
     #search {
         width: 500px;
@@ -204,3 +209,5 @@ body {
         left: calc(50% - 250px);
     }
 }
+
+
