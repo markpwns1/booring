@@ -619,7 +619,7 @@ function openPost(post) {
     danbooruPostScore.text(post.score);
     danbooruPostFavourites.text(post.fav_count || "N/A");
     copyLinkButton.on("click", () => {
-        const link = location.protocol + '//' + location.host + location.pathname + "post/" + currentDomain + "/" + post.id;
+        const link = location.protocol + '//' + location.host + "/post/" + currentDomain + "/" + post.id;
         navigator.clipboard.writeText(link).then(() => {
             copyLinkButton.text("copied");
             setTimeout(() => copyLinkButton.text("(copy link)"), 1000);
