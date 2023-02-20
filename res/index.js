@@ -495,7 +495,7 @@ function search(tags, additive, callback) {
                 else {
                     if(callback) callback({
                         found: populated,
-                        reachedEnd: false
+                        reachedEnd: isIDSearch
                     });
                 }
             });
