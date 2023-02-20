@@ -1,101 +1,14 @@
 
-const CATEGORIES = [ "general", "artist", "", "copyright", "character", "meta" ];
+const CATEGORIES = {
+    0: "general",
+    1: "artist",
+    3: "copyright",
+    4: "character",
+    5: "meta",
+    "tag": "general"
+};
 
 const ONE_DAY_MS = 86400000;
-
-const DOMAINS = {
-    danbooru: {
-        postPrefix: "https://danbooru.donmai.us/posts/",
-        searchUrl: "https://danbooru.donmai.us/posts.json?tags=",
-        tagUrl: "https://danbooru.donmai.us/tags.json?search[name_comma]=",
-        suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]=",
-        ratingMappings: { 
-            "safe": "general",
-        },
-        ratingsToString: {
-            "g": "General",
-            "s": "Sensitive",
-            "q": "Questionable",
-            "e": "Explicit"
-        },
-        postMappings: { },
-        suggestionMappings: { 
-            "value": "name"
-        },
-        tagCache: [ ],
-        downloadTags: callback => {
-            requestSequence([
-                // top 200 artists
-                "0:https://danbooru.donmai.us/tags.json?limit=200&only=name,post_count,category&search[category]=1&search[order]=count",
-                // top 500 meta tags
-                "1:https://danbooru.donmai.us/tags.json?limit=500&only=name,post_count,category&search[category]=5&search[order]=count",
-                // top 750 copyright tags
-                "2:https://danbooru.donmai.us/tags.json?limit=750&only=name,post_count,category&search[category]=3&search[order]=count",
-                // get all characters with 500+ posts
-                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>2000",
-                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>1000..2000",
-                "3:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=>500..999",
-                // get all general tags with 10K+ posts
-                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=25000",
-                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=10000..25000",
-                "4:https://danbooru.donmai.us/tags.json?limit=1000&only=name,post_count,category&search[category]=4&search[order]=count&search[post_count]=5000..9999",
-            ], results => {
-                const interleaved = interleaveArrays(results);
-                callback(interleaved);
-            });
-        }
-    },
-    yandere: {
-        postPrefix: "https://yande.re/post/show/",
-        searchUrl: "https://yande.re/post.json?tags=",
-        tagUrl: undefined,
-        // temporarily use danboory suggestions
-        suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=",
-        // suggestionsUrl: "https://yande.re/tag.json?limit=10&order=count&name_pattern=",
-        ratingMappings: {
-            "g": "s",
-            "general": "safe",
-            "s": "safe",
-            "sensitive": "safe",
-            "q": "questionable",
-            "questionable": "questionable",
-            "e": "questionable",
-            "explicit": "questionable",
-        },
-        ratingsToString: {
-            "s": "Safe",
-            "q": "Questionable"
-        },
-        postMappings: {
-            "preview_url": "preview_file_url",
-            "sample_url": "large_file_url",
-            "jpeg_width": "image_width",
-            "jpeg_height": "image_height",
-            "tags": [ "tag_string", "tag_string_general" ],
-        },
-        // temporarily use danbooru suggestions
-        suggestionMappings: {
-            "type": "category"
-        },
-        tagCache: [ ],
-        downloadTags: callback => {
-            $.getJSON("https://yande.re/tag/summary.json", data => {
-                const tags = data.data.split(" ").filter(x => x != "").map(x => {
-                    const parts = x.split("`");
-                    if(!parts[1]) console.log(x)
-                    return {
-                        category: parseInt(parts[0]),
-                        name: parts[1].trim(),
-                        post_count: -1
-                    }
-                });
-                callback(tags);
-            }).fail(() => {
-                callback([]);
-            });
-        }
-    }
-}
 
 let currentPage = 0;
 
@@ -185,23 +98,6 @@ function interleaveArrays(arrays) {
     return result;
 }
 
-function mapObject(obj, mappings) {
-    for (const from of Object.keys(mappings)) {
-        if (obj.hasOwnProperty(from)) {
-            const to = mappings[from];
-            if(typeof to === "string") {
-                obj[to] = obj[from];
-            }
-            else {
-                for(let i = 0; i < to.length; i++) {
-                    obj[to[i]] = obj[from];
-                }
-            }
-        }
-    }
-}
-
-
 function lastIndexOfRegex(str, regex, lowerBound, upperBound) {
     let lastIndex = -1;
     lowerBound = lowerBound || 0;
@@ -261,6 +157,7 @@ $(document).ready(function () {
         fullscreenImage.off("load");
         fullscreenImage.attr("src", "");
         fullscreenVideoSrc.attr("src", "");
+        fullscreenVideo[0].load();
         window.scrollTo(savedScrollCoords.x, savedScrollCoords.y);
     }
 
@@ -284,7 +181,7 @@ $(document).ready(function () {
         }
 
         function addSuggestion(x) {
-            const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category]}' href='#' onclick='return false'></a>`);
+            const suggestion = $(`<a class='suggestion tag-${CATEGORIES[x.category] || x.category}' href='#' onclick='return false'></a>`);
             suggestion.text(x.name);
             suggestion.on("click", function () {
                 const i = line.startsWith("-")? 1 : 0;
@@ -306,7 +203,7 @@ $(document).ready(function () {
         timer = setTimeout(() => {
             $.getJSON(DOMAINS[currentDomain].suggestionsUrl + formatTag(line), function (data) {
 
-                if(data.length == 0) {
+                if(!data || data.length == 0) {
                     return;
                 }
 
@@ -392,6 +289,13 @@ $(document).ready(function () {
 
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
+
+    if(params.domain) {
+        domainSelect.val(params.domain);
+        currentDomain = domainSelect.val();
+        checkTagCache(currentDomain);
+    }
+
     if(params.q) {
         const search = params.q.replace(/,/g, "\n");
         searchBox.val(search);
@@ -411,7 +315,7 @@ $(document).ready(function () {
 function checkTagCache(domain) {
     const lastUpdated = localStorage.getItem("tag-cache-last-update-" + domain);
     const now = Date.now();
-    if(lastUpdated == null || now - lastUpdated > ONE_DAY_MS) {
+    if(!DOMAINS[domain].disableCaching && (lastUpdated == null || now - lastUpdated > ONE_DAY_MS * 3)) {
         console.log("UPDATING TAG CACHE");
         DOMAINS[domain].downloadTags(tags => {
             mapObject(tags, DOMAINS[domain].suggestionMappings);
@@ -427,7 +331,7 @@ function checkTagCache(domain) {
 }
 
 function loadTagCache(domain) {
-    const cache = localStorage.getItem("tag-cache-" + domain);
+    const cache = localStorage.getItem("tag-cache-" + domain) || "";
     return cache.split(";").map(x => {
         const parts = x.split(",");
         return {
@@ -453,6 +357,13 @@ function onFinishedSearch(result) {
     }
 }
 
+function mapRating(rating) {
+    rating = rating.toLowerCase().substring("rating:".length);
+    const mapped = DOMAINS[currentDomain].ratingMappings[rating];
+    if(mapped) return "rating:" + mapped;
+    return "rating:" + rating;
+}
+
 function sortTags(tags) {
     const freeTags = [];
     const taxedTags = [];
@@ -463,14 +374,14 @@ function sortTags(tags) {
     for(const tag of tagSet) {
         if(tag.startsWith("-")) {
             if(isRating(tag.slice(1))) {
-                freeTags.push(tag.slice(1));
+                freeTags.push(mapRating(tag.slice(1)));
             }
             else {
                 negatedTags.push(tag.slice(1));
             }
         }
         else if(isRating(tag)) {
-            freeTags.push(tag);
+            freeTags.push(mapRating(tag));
         }
         else {
             taxedTags.push(tag);
@@ -529,9 +440,16 @@ function search(tags, additive, callback) {
     const _search = () => {
         const limit = cachedSearch.checkTagsInclude.length > 0 
             || cachedSearch.checkTagsExclude.length > 0 ? cachedSearch.searchTags.length * 20 : 20;
-        const searchUrl = DOMAINS[currentDomain].searchUrl + cachedSearch.searchTags.join(" ") + "&limit=" + limit + "&page=";
-        $.getJSON(searchUrl + currentPage, function (data) {
-            if(data.length == 0) {
+
+        const isIDSearch = cachedSearch.searchTags.some(x => x.startsWith("id:"));
+        const limitText = isIDSearch? "" : ("&limit=" + limit + "&" + DOMAINS[currentDomain].pageKey + "=" + currentPage);
+        const searchUrl = DOMAINS[currentDomain].searchUrl + cachedSearch.searchTags.join(" ") + limitText;
+        console.log("Sending request to " + searchUrl);
+        $.getJSON(searchUrl, function (data) {
+            const unpack = DOMAINS[currentDomain].searchUnpack;
+            if(unpack) data = unpack(data);
+            
+            if(!data || data.length == 0) {
                 if(callback) callback({
                     found: populated,
                     reachedEnd: true
@@ -549,7 +467,7 @@ function search(tags, additive, callback) {
 
             if(filtered.length == 0) {
                 tries++;
-                if(tries < 5) {
+                if(!isIDSearch && tries < 5) {
                     currentPage++;
                     _search();
                 }
@@ -561,7 +479,7 @@ function search(tags, additive, callback) {
             }
 
             populateResults(filtered, () => {
-                if(populated < 20) {
+                if(!isIDSearch && populated < 20) {
                     currentPage++;
                     _search();
                 }
@@ -582,7 +500,7 @@ function search(tags, additive, callback) {
 
     const tagTypes = sortTags(tags);
 
-    if(currentDomain == "yandere" || tagTypes.taxedTags.length + tagTypes.negatedTags.length < 3) {
+    if(currentDomain != "danbooru" || tagTypes.taxedTags.length + tagTypes.negatedTags.length < 3) {
         cachedSearch.searchTags = [ ...tagTypes.taxedTags, ...tagTypes.negatedTags.map(x => "-" + x), ...tagTypes.freeTags ];
         cachedSearch.checkTagsInclude = [];
         cachedSearch.checkTagsExclude = [];
@@ -618,6 +536,7 @@ function getTags(textboxContent) {
 }
 
 function reportError(err) {
+    console.error(err.statusText);
     if(err.status == 422) {
         alert("Sorry! This search is not supported.");
     }
@@ -650,6 +569,7 @@ function openPost(post) {
     fullscreenContainer.show();
     fullscreenContainer.scrollTop(0);
 
+    post.file_ext = post.file_ext || post.file_url.substring(post.file_url.lastIndexOf(".") + 1);
     if(post.file_ext == "mp4" || post.file_ext == "webm") {
         fullscreenVideoSrc.attr("src", post.large_file_url);
         fullscreenVideoSrc.attr("type", "video/" + post.file_ext);
@@ -675,7 +595,12 @@ function openPost(post) {
     danbooruPostID.text(post.id);
     danbooruOpenPost.attr("href", DOMAINS[currentDomain].postPrefix + post.id);
     danbooruPostDate.text(post.created_at.slice(0, 10));
-    danbooruPostFilesize.text(Math.round(post.file_size / 1000) + " KB (" + post.image_width + "x" + post.image_height + ")");
+    if(post.file_size) {
+        danbooruPostFilesize.text(Math.round(post.file_size / 1000) + " KB (" + post.image_width + "x" + post.image_height + ")");
+    }
+    else {
+        danbooruPostFilesize.text(post.image_width + "x" + post.image_height);
+    }
     danbooruPostSource.text(post.source || "Unknown");
     danbooruPostSource.attr("href", post.source);
     danbooruPostRating.text(DOMAINS[currentDomain].ratingsToString[post.rating] || post.rating);
@@ -713,19 +638,32 @@ function populateResults(data, callback = null) {
     }
 
     for(const post of data) {
-        if(currentDomain == "yandere") {
-            post.created_at = new Date(post.created_at).toISOString();
-        }
+        if(!post.large_file_url) post.large_file_url = post.file_url;
+
+        const preprocessor = DOMAINS[currentDomain].postPreprocess;
+        if(preprocessor) preprocessor(post);
 
         const image = $("<img>");
-        const timeout = setTimeout(completeImage, 3000);
+        const imgHeight = normalisedHeight(post);
+        const timeout = setTimeout(imgError, 3000);
+
+        function imgError() {
+            clearTimeout(timeout);
+            image.remove();
+            if(leftHeight > rightHeight) {
+                rightHeight -= imgHeight;
+            } else {
+                leftHeight -= imgHeight;
+            }
+            completeImage();
+        }
 
         if(leftHeight > rightHeight) {
             rightColumn.append(image);
-            rightHeight += normalisedHeight(post);
+            rightHeight += imgHeight;
         } else {
             leftColumn.append(image);
-            leftHeight += normalisedHeight(post);
+            leftHeight += imgHeight;
         }
 
         image.load(() => {
@@ -734,10 +672,7 @@ function populateResults(data, callback = null) {
             completeImage();
         });
 
-        image.on("error", () => {
-            clearTimeout(timeout);
-            completeImage();
-        });
+        image.on("error", imgError);
 
         image.on("click", () => openPost(post));
         image.attr("src", post.preview_file_url);

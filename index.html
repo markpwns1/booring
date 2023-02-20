@@ -2,19 +2,22 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Booru Client</title>
-        <link rel="stylesheet" href="index.css" />
+        <title>Booring</title>
+        <link rel="stylesheet" href="index.css" type="text/css" />
     </head>
     <body>
         <div id="content">
             <div id="search">
                 <button id="search-btn">Search</button>
-                <button id="help-btn">Help</button>
                 <select id="domain-select">
                     <option value="danbooru">danbooru</option>
+                    <option value="gelbooru">gelbooru</option>
                     <option value="yandere">yande.re</option>
                 </select>
-                <button id="clear-cached-tags">Clear Cache</button>
+                <div id="header-right-side">
+                    <a id="help-btn" href="help.html" target="_blank">Help</a>
+                    <button id="clear-cached-tags">Clear Cache</button>
+                </div>
                 <textarea type="text" id="search-box" spellcheck="false">rating:g
 aether_(genshin_impact)
 lumine_(genshin_impact)
@@ -74,28 +77,8 @@ kimono
                 </div>
             </div>
         </div>
-        <div id="help-menu" hidden>
-            <a id="close-help-menu" href="#" onclick="return false">Close</a>
-            <h3>Help</h3>
-            <ul>
-                <li>
-                    Type the Danbooru/Yande.re tags you want to search into the search box. Make sure to use one tag per line. 
-                </li>
-                <li>
-                    Danbooru's limit of 2 tags <strong>does not apply</strong> - you may use as many tags as you want. You may also exclude as many tags as you want (using "-whatever", for example). However, complex queries like "or" statements only have limited support. Meta tags, with the exception of "rating:_", also have limited support.
-                </li>
-                <li>
-                    There is an autocomplete, so if you partially type a tag, it will give you suggestions. Some common tags are cached for instant suggestions, and more obscure ones will appear afterwards. Click the "Clear Cache" button to clear the cache, and it will not be regenerated until you visit this site again. Even if you do not clear the cache, it refreshes by itself every 7 days.
-                </li>
-                <li>
-                    Once the images are loaded, tap/click on any image to view it in full resolution. 
-                </li>
-                <li>
-                    If you experience a bug (especially with autocomplete/searching), try clicking the "Clear Cache" button and it might fix it. If not, please email me at estilpossiblededeveniruneetoile (at) yahoo.com
-                </li>
-            </ul>
-        </div>
         <script src="jquery.js"></script>
+        <script src="core.js"></script>
         <script src="index.js"></script>
     </body>
 </html>
