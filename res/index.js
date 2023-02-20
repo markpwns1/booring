@@ -316,7 +316,23 @@ $(document).ready(function () {
 
     currentDomain = domainSelect.val();
     checkTagCache(currentDomain);
+
+    history.pushState({}, "", location.href);
+
+    window.addEventListener("popstate", function(e) {
+        if(fullscreenImage.is(":visible")) {
+            closeFullscreen();
+            history.pushState({}, "", location.href);
+        }
+        else {
+            this.history.back();
+        }
+    });
 });
+
+
+
+
 
 function checkTagCache(domain) {
     const lastUpdated = localStorage.getItem("tag-cache-last-update-" + domain);
