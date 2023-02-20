@@ -19,6 +19,7 @@ let moreButton;
 let loadingMessage;
 let appContent;
 let lastSearch;
+let lastDomain;
 let searchPane;
 let searchBtn;
 let domainSelect;
@@ -43,6 +44,8 @@ let downscaleWarning;
 let viewOriginal;
 
 let savedScrollCoords = { x: 0, y: 0 };
+let savedURL = "";
+
 let currentDomain = "danbooru";
 
 let leftHeight = 0;
@@ -51,7 +54,8 @@ let rightHeight = 0;
 const cachedSearch = {
     searchTags: [],
     checkTagsInclude: [],
-    checkTagsExclude: []
+    checkTagsExclude: [],
+    domain: undefined
 };
 
 const metaTagSymbolRegex = new RegExp(/:|-/g);
@@ -159,6 +163,7 @@ $(document).ready(function () {
         fullscreenVideoSrc.attr("src", "");
         fullscreenVideo[0].load();
         window.scrollTo(savedScrollCoords.x, savedScrollCoords.y);
+        window.history.replaceState(null, null, savedURL);
     }
 
     // fullscreenImage.on("click", closeFullscreen);
@@ -227,7 +232,7 @@ $(document).ready(function () {
         const tags = getTags(text.trim());
         suggestionsPanel.empty();
         
-        if (lastSearch && tags.length == lastSearch.length && tags.every(v => lastSearch.includes(v))) {
+        if (lastDomain && lastDomain == currentDomain && lastSearch && tags.length == lastSearch.length && tags.every(v => lastSearch.includes(v))) {
             document.activeElement.blur();
             return;
         }
@@ -235,6 +240,7 @@ $(document).ready(function () {
         leftHeight = 0;
         rightHeight = 0;
         lastSearch = tags;
+        lastDomain = currentDomain;
         currentPage = 1;
 
         searchButtonClicked(tags, false, x => {
@@ -407,6 +413,9 @@ function searchButtonClicked(tags, additive, callback) {
     loadingMessage.text("loading...");
     loadingMessage.show();
 
+    savedURL = '/?domain=' + currentDomain + '&q=' + tags.join(',');
+    history.replaceState({}, '', savedURL);
+
     search(tags, additive, result => {
         if(result.reachedEnd) {
             loadingMessage.text("No more images found.");
@@ -500,6 +509,7 @@ function search(tags, additive, callback) {
 
     const tagTypes = sortTags(tags);
 
+    cachedSearch.domain = currentDomain;
     if(currentDomain != "danbooru" || tagTypes.taxedTags.length + tagTypes.negatedTags.length < 3) {
         cachedSearch.searchTags = [ ...tagTypes.taxedTags, ...tagTypes.negatedTags.map(x => "-" + x), ...tagTypes.freeTags ];
         cachedSearch.checkTagsInclude = [];
@@ -557,6 +567,8 @@ function doTagSection(name, tagString) {
 
 function openPost(post) {
 
+    history.replaceState({}, '', '/post/' + currentDomain + '/' + post.id);
+
     suggestionsPanel.empty();
     savedScrollCoords = { x: window.scrollX, y: window.scrollY };
 
@@ -607,7 +619,7 @@ function openPost(post) {
     danbooruPostScore.text(post.score);
     danbooruPostFavourites.text(post.fav_count || "N/A");
     copyLinkButton.on("click", () => {
-        const link = location.protocol + '//' + location.host + location.pathname + "/post/" + currentDomain + "/" + post.id;
+        const link = location.protocol + '//' + location.host + location.pathname + "post/" + currentDomain + "/" + post.id;
         navigator.clipboard.writeText(link).then(() => {
             copyLinkButton.text("copied");
             setTimeout(() => copyLinkButton.text("(copy link)"), 1000);
