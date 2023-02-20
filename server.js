@@ -7,7 +7,7 @@ const fs = require('fs');
 const http = require('http');
 const axios = require('axios');
 const app = express();
-const port = 27003;
+const port = env.PORT || 3000;
 
 const HTML_TEMPLATE = fs.readFileSync("embed.html", "utf-8");
 
