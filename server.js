@@ -101,18 +101,18 @@ app.get("/proxy/json/*", (req, res) => {
 });
 
 function getData(url, res, headers) {
-    fetch(url, { headers })
-        .then(response => {
-            for (const [key, value] of response.headers) {
-                res.setHeader(key, value);
-            }
-            return response.buffer()
-        })
-        .then(buffer => res.send(buffer))
-        .catch(err => {
-            res.sendStatus(500);
-            console.log(err)
-        });
+    axios.get(url, {
+        responseType: 'stream',
+        headers: headers
+    })
+    .then((stream) => {
+        res.writeHead(stream.status, stream.headers)
+        stream.data.pipe(res)
+    })
+    .catch(err => {
+        res.sendStatus(500);
+        console.log(err)
+    });
 }
 
 app.get("/gelbooru-img/*", (req, res) => {
