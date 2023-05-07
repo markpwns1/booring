@@ -24,6 +24,8 @@ let searchPane;
 let searchBtn;
 let domainSelect;
 let suggestionsPanel;
+let initialText;
+let currentPost;
 
 let danbooruPostID;
 let danbooruOpenPost;
@@ -50,6 +52,7 @@ let currentDomain = "danbooru";
 
 let leftHeight = 0;
 let rightHeight = 0;
+let warnNSFW = true;
 
 const cachedSearch = {
     searchTags: [],
@@ -133,6 +136,7 @@ $(document).ready(function () {
     searchBtn = $("#search-btn");
     domainSelect = $("#domain-select");
     suggestionsPanel = $("#suggestions");
+    initialText = $("#initial-text");
 
     danbooruPostID = $("#danbooru-post-id");
     danbooruOpenPost = $("#danbooru-open-post");
@@ -232,6 +236,16 @@ $(document).ready(function () {
         const tags = getTags(text.trim());
         suggestionsPanel.empty();
         
+        if(warnNSFW && DOMAINS[currentDomain].isNSFW && !tags.some(x => x.startsWith("id:")) && !tags.some(x => x.startsWith("rating:"))) {
+            const includeNSFW = confirm("Warning: your search may include NSFW content. Would you like to proceed?\n\nNote: including \"rating:safe\" in your search will filter NSFW content.\n\nIf you select 'OK' you will not be warned again.");
+            if(includeNSFW) {
+                warnNSFW = false;
+            } else {
+                tags.unshift("rating:safe");
+                searchBox.val(tags.join("\n"));
+            }
+        }
+
         if (lastDomain && lastDomain == currentDomain && lastSearch && tags.length == lastSearch.length && tags.every(v => lastSearch.includes(v))) {
             document.activeElement.blur();
             return;
@@ -420,6 +434,8 @@ function sortTags(tags) {
 function searchButtonClicked(tags, additive, callback) {
     if(tags.length == 0) return;
     
+    initialText.remove();
+
     if(!additive) {
         leftColumn.empty();
         rightColumn.empty();
@@ -583,6 +599,7 @@ function doTagSection(name, tagString) {
 
 function openPost(post) {
 
+    currentPost = post;
     history.replaceState({}, '', '/post/' + currentDomain + '/' + post.id);
 
     suggestionsPanel.empty();
@@ -598,9 +615,10 @@ function openPost(post) {
     fullscreenContainer.scrollTop(0);
 
     post.file_ext = post.file_ext || post.file_url.substring(post.file_url.lastIndexOf(".") + 1);
-    if(post.file_ext == "mp4" || post.file_ext == "webm") {
+    const file_ext = post.file_ext == "zip"? "webm" : post.file_ext;
+    if(file_ext == "mp4" || file_ext == "webm") {
         fullscreenVideoSrc.attr("src", post.large_file_url);
-        fullscreenVideoSrc.attr("type", "video/" + post.file_ext);
+        fullscreenVideoSrc.attr("type", "video/" + file_ext);
         fullscreenVideo[0].load();
     }
     else {
@@ -638,7 +656,7 @@ function openPost(post) {
         const link = location.protocol + '//' + location.host + "/post/" + currentDomain + "/" + post.id;
         navigator.clipboard.writeText(link).then(() => {
             copyLinkButton.text("copied");
-            setTimeout(() => copyLinkButton.text("(copy link)"), 1000);
+            setTimeout(() => copyLinkButton.text("(copy link)"), 2000);
         });
     });
     doTagSection("artist", post.tag_string_artist);
@@ -694,11 +712,11 @@ function populateResults(data, callback = null) {
             leftHeight += imgHeight;
         }
 
-        image.load(() => {
+        image[0].onload = () => {
             populated++;
             clearTimeout(timeout);
             completeImage();
-        });
+        };
 
         image.on("error", imgError);
 

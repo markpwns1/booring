@@ -8,6 +8,7 @@ var DOMAINS = {
         tagUrl: "https://danbooru.donmai.us/tags.json?search[name_comma]=",
         suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]=",
         pageKey: "page",
+        isNSFW: true,
         ratingMappings: { 
             "safe": "general",
         },
@@ -51,6 +52,7 @@ var DOMAINS = {
         tagUrl: undefined,
         suggestionsUrl: "/proxy/json/https://gelbooru.com/index.php?page=autocomplete2&type=tag_query&limit=10&term=",
         pageKey: "pid",
+        isNSFW: true,
         postPreprocess: post => {
             const parts = post.created_at.split(" ");
             const month = MONTHS.indexOf(parts[1]) + 1;
@@ -94,6 +96,7 @@ var DOMAINS = {
         suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=",
         // suggestionsUrl: "https://yande.re/tag.json?limit=10&order=count&name_pattern=",
         pageKey: "page",
+        isNSFW: false,
         postPreprocess: post => {
             post.created_at = new Date(post.created_at).toISOString();
             post.large_file_url = "/yandere-img/" + post.large_file_url;
