@@ -220,18 +220,18 @@ button:hover, select:hover, button:focus, select:focus {
 
 #prev-post {
     float: left;
-    width: 25%;
+    width: 10%;
 }
 
 #downscale-info {
     float: left;
-    width: 50%;
+    width: 80%;
     text-align: center;
 }
 
 #next-post {
     float: right;
-    width: 25%;
+    width: 10%;
     text-align: right;
 }
 
