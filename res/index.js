@@ -8,6 +8,10 @@ const CATEGORIES = {
     "tag": "general"
 };
 
+const ADVANCED_DOMAINS = [
+    "rule34"
+];
+
 const ONE_DAY_MS = 86400000;
 
 let currentPage = 0;
@@ -343,17 +347,21 @@ $(document).ready(function () {
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
 
-    if(!params.advanced || params.advanced == "0") {
+    if(params.domain) {
+        if(ADVANCED_DOMAINS.includes(params.domain)) {
+            showAdvancedDomains = 1;
+        }
+
+        domainSelect.val(params.domain);
+        currentDomain = domainSelect.val();
+        checkTagCache(currentDomain);
+    }
+
+    if(showAdvancedDomains == 0 && (!params.advanced || params.advanced == "0")) {
         $(".advanced-domain").remove();
     }
     else {
         showAdvancedDomains = 1;
-    }
-
-    if(params.domain) {
-        domainSelect.val(params.domain);
-        currentDomain = domainSelect.val();
-        checkTagCache(currentDomain);
     }
 
     if(params.q) {
@@ -486,7 +494,7 @@ function searchButtonClicked(tags, additive, callback) {
     if(showAdvancedDomains)
         savedURL += "advanced=1&";
     savedURL += 'domain=' + currentDomain + '&q=' + tags.join(',');
-    
+
     history.replaceState({}, '', savedURL);
 
     search(tags, additive, result => {
