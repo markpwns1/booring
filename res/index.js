@@ -329,14 +329,14 @@ $(document).ready(function () {
         const currentIndex = populatedPosts.indexOf(currentPost);
         if(currentIndex == 0) return;
         const prevPost = populatedPosts[currentIndex - 1];
-        openPost(prevPost);
+        openPost(prevPost, prevPost.offsetTop - 100);
     });
 
     nextPostButton.on("click", function () {
         const currentIndex = populatedPosts.indexOf(currentPost);
         if(currentIndex == populatedPosts.length - 1) return;
         const nextPost = populatedPosts[currentIndex + 1];
-        openPost(nextPost);
+        openPost(nextPost, nextPost.offsetTop - 100);
     });
 
     fullscreenVideo.on("loadeddata", function() {
@@ -532,7 +532,7 @@ function search(tags, additive, callback) {
             || cachedSearch.checkTagsExclude.length > 0 ? cachedSearch.searchTags.length * 20 : 20;
 
         const isIDSearch = cachedSearch.searchTags.some(x => x.startsWith("id:"));
-        const limitText = isIDSearch? "" : ("&limit=" + limit + "&" + DOMAINS[currentDomain].pageKey + "=" + currentPage);
+        const limitText = isIDSearch? "" : ("&limit=" + limit + "&" + DOMAINS[currentDomain].pageKey + "=" + (currentPage + (DOMAINS[currentDomain].pageOffset || 0)));
         const searchUrl = DOMAINS[currentDomain].searchUrl + cachedSearch.searchTags.join(" ") + limitText;
         console.log("Sending request to " + searchUrl);
         $.getJSON(searchUrl, function (data) {
@@ -654,13 +654,15 @@ function doTagSection(name, tagString) {
     }
 }
 
-function openPost(post) {
+function openPost(post, overrideScrollY) {
+
+    if(overrideScrollY == undefined) overrideScrollY = window.scrollY;
 
     currentPost = post;
     history.replaceState({}, '', '/post/' + currentDomain + '/' + post.id);
 
     suggestionsPanel.empty();
-    savedScrollCoords = { x: window.scrollX, y: window.scrollY };
+    savedScrollCoords = { x: window.scrollX, y: overrideScrollY };
 
     const currentIndex = populatedPosts.indexOf(currentPost);
     if(currentIndex > 0) {
@@ -775,9 +777,11 @@ function populateResults(data, callback = null) {
         }
 
         if(leftHeight > rightHeight) {
+            post.offsetTop = rightHeight * 250;
             rightColumn.append(image);
             rightHeight += imgHeight;
         } else {
+            post.offsetTop = leftHeight * 250;
             leftColumn.append(image);
             leftHeight += imgHeight;
         }

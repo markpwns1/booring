@@ -8,6 +8,7 @@ var DOMAINS = {
         tagUrl: "https://danbooru.donmai.us/tags.json?search[name_comma]=",
         suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]=",
         pageKey: "page",
+        pageOffset: 0,
         isNSFW: true,
         ratingMappings: { 
             "safe": "general",
@@ -52,6 +53,7 @@ var DOMAINS = {
         tagUrl: undefined,
         suggestionsUrl: "/proxy/json/https://gelbooru.com/index.php?page=autocomplete2&type=tag_query&limit=10&term=",
         pageKey: "pid",
+        pageOffset: -1,
         isNSFW: true,
         postPreprocess: post => {
             const parts = post.created_at.split(" ");
@@ -96,6 +98,7 @@ var DOMAINS = {
         suggestionsUrl: "https://danbooru.donmai.us/autocomplete.json?limit=10&search[type]=tag_query&search[query]=",
         // suggestionsUrl: "https://yande.re/tag.json?limit=10&order=count&name_pattern=",
         pageKey: "page",
+        pageOffset: 0,
         isNSFW: false,
         postPreprocess: post => {
             post.created_at = new Date(post.created_at).toISOString();
@@ -150,6 +153,7 @@ var DOMAINS = {
         tagUrl: undefined,
         suggestionsUrl: "/r34/https://rule34.xxx/public/autocomplete.php?q=",
         pageKey: "pid",
+        pageOffset: -1,
         isNSFW: true,
         postPreprocess: post => {
             post.created_at = "Unknown";
