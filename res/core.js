@@ -148,7 +148,7 @@ var DOMAINS = {
         }
     },
     rule34: {
-        postPrefix: "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&id=",
+        postPrefix: "https://rule34.xxx/index.php?page=post&s=view&id=",
         searchUrl: "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&tags=",
         tagUrl: undefined,
         suggestionsUrl: "/r34/https://rule34.xxx/public/autocomplete.php?q=",
@@ -157,6 +157,10 @@ var DOMAINS = {
         isNSFW: true,
         postPreprocess: post => {
             post.created_at = "Unknown";
+            if(post.file_url.includes("mp4") || post.file_url.includes("webm")) {
+                var uri = new URL(post.file_url);
+                post.large_file_url = "/r34/https://uswebm.rule34.xxx/" + uri.pathname + "?" + post.id + "=";
+            }
         },
         ratingMappings: {
             "general": "safe",
