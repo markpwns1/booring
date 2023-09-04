@@ -329,14 +329,14 @@ $(document).ready(function () {
         const currentIndex = populatedPosts.indexOf(currentPost);
         if(currentIndex == 0) return;
         const prevPost = populatedPosts[currentIndex - 1];
-        openPost(prevPost, prevPost.offsetTop - 100);
+        openPost(prevPost, savedScrollCoords.y);
     });
 
     nextPostButton.on("click", function () {
         const currentIndex = populatedPosts.indexOf(currentPost);
         if(currentIndex == populatedPosts.length - 1) return;
         const nextPost = populatedPosts[currentIndex + 1];
-        openPost(nextPost, nextPost.offsetTop - 100);
+        openPost(nextPost, savedScrollCoords.y);
     });
 
     fullscreenVideo.on("loadeddata", function() {
@@ -777,11 +777,9 @@ function populateResults(data, callback = null) {
         }
 
         if(leftHeight > rightHeight) {
-            post.offsetTop = rightHeight * 250;
             rightColumn.append(image);
             rightHeight += imgHeight;
         } else {
-            post.offsetTop = leftHeight * 250;
             leftColumn.append(image);
             leftHeight += imgHeight;
         }
