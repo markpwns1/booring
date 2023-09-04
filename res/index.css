@@ -208,6 +208,44 @@ button:hover, select:hover, button:focus, select:focus {
     float: right;
 }
 
+#post-top-bar {
+    margin-bottom: 15px;
+}
+
+#post-top-bar:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+#prev-post {
+    float: left;
+    width: 25%;
+}
+
+#downscale-info {
+    float: left;
+    width: 50%;
+    text-align: center;
+}
+
+#next-post {
+    float: right;
+    width: 25%;
+    text-align: right;
+}
+
+#fullscreen-close {
+    display: block;
+    width: fit-content;
+    text-align: center;
+    margin: auto;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
 @media (min-width: 600px) {
     #search {
         width: 500px;

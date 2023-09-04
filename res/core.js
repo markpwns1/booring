@@ -143,6 +143,42 @@ var DOMAINS = {
                 callback([]);
             });
         }
+    },
+    rule34: {
+        postPrefix: "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&id=",
+        searchUrl: "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&tags=",
+        tagUrl: undefined,
+        suggestionsUrl: "/r34/https://rule34.xxx/public/autocomplete.php?q=",
+        pageKey: "pid",
+        isNSFW: true,
+        postPreprocess: post => {
+            post.created_at = "Unknown";
+        },
+        ratingMappings: {
+            "general": "safe",
+            "g": "safe",
+            "s": "questionable",
+            "q": "questionable",
+            "e": "explicit",
+        },
+        ratingsToString: {
+            "safe": "Safe",
+            "questionable": "Questionable",
+            "explicit": "Explicit"
+        },
+        postMappings: { 
+            "preview_url": "preview_file_url",
+            "sample_url": "large_file_url",
+            "height": "image_height",
+            "width": "image_width",
+            "tags": [ "tag_string", "tag_string_general" ]
+        },
+        suggestionMappings: { 
+            "value": "name",
+            "type": "category"
+        },
+        tagCache: [ ],
+        downloadTags: () => []
     }
 }
 

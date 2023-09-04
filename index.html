@@ -13,6 +13,7 @@
                     <option value="danbooru">danbooru</option>
                     <option value="gelbooru">gelbooru</option>
                     <option value="yandere">yande.re</option>
+                    <option class="advanced-domain" value="rule34">rule 34</option>
                 </select>
                 <div id="header-right-side">
                     <a id="help-btn" href="help.html" target="_blank">Help</a>
@@ -43,9 +44,14 @@ kimono
                 </video>
             </div>
             <div id="danbooru-post-info">
-                <span id="downscale-warning"></span> <a id="view-original" target="_blank">(view original)</a>
-                <br> <br>
-                <a href="#" onclick="return false" id="fullscreen-close">Back</a>
+                <div id="post-top-bar">
+                    <a id="prev-post" href="#">&lt;&lt;</a>
+                    <div id="downscale-info">
+                        <span id="downscale-warning"></span> <a id="view-original" target="_blank">(view original)</a> 
+                    </div>
+                    <a id="next-post" href="#">&gt;&gt;</a>
+                </div>
+                <a id="fullscreen-close" href="#" onclick="return false">Back</a>
                 <h3>Information</h3>
                 <p>
                     ID: <span id="danbooru-post-id"></span> <a id="copy-link" href="#" onclick="return false">(copy link)</a> <a id="danbooru-open-post" target="_blank">(open original post)</a><br>

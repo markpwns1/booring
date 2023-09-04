@@ -13,8 +13,6 @@ const HTML_TEMPLATE = fs.readFileSync("embed.html", "utf-8");
 
 const postCache = { };
 
-// (\forall p. (p \in (P \ { R, S }) \implies ~C(p))) \land (\exists p. (p \in P \land C(p))) \implies (C(R) \lor C(S))
-
 const stripPrefixes = (str, prefixes) => {
     for(const prefix of prefixes) {
         if(str.startsWith(prefix)) {
@@ -129,6 +127,14 @@ app.get("/yandere-img/*", (req, res) => {
     });
 });
 
+app.get("/r34/*", (req, res) => {
+    const url = req.url.substring(5);
+    getData(url, res, {
+        "Referrer": "https://rule34.xxx/index.php?page=tags&s=list",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0"
+    });
+});
+
 app.get("/danbooru-vid/*", (req, res) => {
     const url = req.url.substring(14);
     axios.get(url, {
@@ -146,7 +152,8 @@ app.get("/danbooru-vid/*", (req, res) => {
 const DOMAIN_TO_NAME = {
     "danbooru": "Danbooru",
     "gelbooru": "Gelbooru",
-    "yandere": "Yande.re"
+    "yandere": "Yande.re",
+    "rule34": "Rule 34",
 }
 
 function generateMetaProperties(table) {

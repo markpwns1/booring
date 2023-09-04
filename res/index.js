@@ -11,6 +11,7 @@ const CATEGORIES = {
 const ONE_DAY_MS = 86400000;
 
 let currentPage = 0;
+let populatedPosts = [ ];
 
 let searchBox;
 let leftColumn;
@@ -26,6 +27,9 @@ let domainSelect;
 let suggestionsPanel;
 let initialText;
 let currentPost;
+
+let prevPostButton;
+let nextPostButton;
 
 let danbooruPostID;
 let danbooruOpenPost;
@@ -53,6 +57,8 @@ let currentDomain = "danbooru";
 let leftHeight = 0;
 let rightHeight = 0;
 let warnNSFW = true;
+
+let showAdvancedDomains = 0;
 
 const cachedSearch = {
     searchTags: [],
@@ -120,6 +126,17 @@ function lastIndexOfRegex(str, regex, lowerBound, upperBound) {
     return lastIndex;
 }
 
+$.fn.toggleOption = function( show ) {
+    $( this ).toggle( show );
+    if( show ) {
+        if( $( this ).parent( 'span.toggleOption' ).length )
+            $( this ).unwrap( );
+    } else {
+        if( $( this ).parent( 'span.toggleOption' ).length == 0 )
+            $( this ).wrap( '<span class="toggleOption" style="display: none;" />' );
+    }
+};
+
 $(document).ready(function () {
 
     searchBox = $("#search-box");
@@ -153,6 +170,8 @@ $(document).ready(function () {
     domainSelect = $("#domain-select");
 
     copyLinkButton = $("#copy-link");
+    prevPostButton = $("#prev-post");
+    nextPostButton = $("#next-post");
 
     moreButton.hide();
     fullscreenContainer.hide();
@@ -302,6 +321,20 @@ $(document).ready(function () {
         $(this).text("Cleared");
     });
 
+    prevPostButton.on("click", function () {
+        const currentIndex = populatedPosts.indexOf(currentPost);
+        if(currentIndex == 0) return;
+        const prevPost = populatedPosts[currentIndex - 1];
+        openPost(prevPost);
+    });
+
+    nextPostButton.on("click", function () {
+        const currentIndex = populatedPosts.indexOf(currentPost);
+        if(currentIndex == populatedPosts.length - 1) return;
+        const nextPost = populatedPosts[currentIndex + 1];
+        openPost(nextPost);
+    });
+
     fullscreenVideo.on("loadeddata", function() {
         fullscreenImage.hide();
         fullscreenVideo.show();
@@ -309,6 +342,13 @@ $(document).ready(function () {
 
     const urlSearchParams = new URLSearchParams(window.location.search);
     const params = Object.fromEntries(urlSearchParams.entries());
+
+    if(!params.advanced || params.advanced == "0") {
+        $(".advanced-domain").remove();
+    }
+    else {
+        showAdvancedDomains = 1;
+    }
 
     if(params.domain) {
         domainSelect.val(params.domain);
@@ -333,20 +373,16 @@ $(document).ready(function () {
 
     history.pushState({}, "", location.href);
 
-    window.addEventListener("popstate", function(e) {
-        if(fullscreenImage.is(":visible")) {
-            closeFullscreen();
-            history.pushState({}, "", location.href);
-        }
-        else {
-            this.history.back();
-        }
-    });
+    // window.addEventListener("popstate", function(e) {
+    //     if(fullscreenImage.is(":visible")) {
+    //         closeFullscreen();
+    //         history.pushState({}, "", location.href);
+    //     }
+    //     else {
+    //         this.history.back();
+    //     }
+    // });
 });
-
-
-
-
 
 function checkTagCache(domain) {
     const lastUpdated = localStorage.getItem("tag-cache-last-update-" + domain);
@@ -355,7 +391,7 @@ function checkTagCache(domain) {
         console.log("UPDATING TAG CACHE");
         DOMAINS[domain].downloadTags(tags => {
             mapObject(tags, DOMAINS[domain].suggestionMappings);
-            saveTagCache("danbooru", tags);
+            saveTagCache(domain, tags);
             DOMAINS[domain].tagCache = tags;
             console.log("DONE");
         });
@@ -439,13 +475,18 @@ function searchButtonClicked(tags, additive, callback) {
     if(!additive) {
         leftColumn.empty();
         rightColumn.empty();
+        populatedPosts = [ ];
     }
 
     moreButton.hide();
     loadingMessage.text("loading...");
     loadingMessage.show();
 
-    savedURL = '/?domain=' + currentDomain + '&q=' + tags.join(',');
+    savedURL = '/?';
+    if(showAdvancedDomains)
+        savedURL += "advanced=1&";
+    savedURL += 'domain=' + currentDomain + '&q=' + tags.join(',');
+    
     history.replaceState({}, '', savedURL);
 
     search(tags, additive, result => {
@@ -531,7 +572,15 @@ function search(tags, additive, callback) {
                     });
                 }
             });
-        }).fail(reportError);
+        }).fail(err => {
+            if(err.status == 200) {
+                if(callback) callback({
+                    found: populated,
+                    reachedEnd: true
+                });
+            }
+            else reportError(err);
+        });
     }
 
     if(additive) {
@@ -604,6 +653,19 @@ function openPost(post) {
 
     suggestionsPanel.empty();
     savedScrollCoords = { x: window.scrollX, y: window.scrollY };
+
+    const currentIndex = populatedPosts.indexOf(currentPost);
+    if(currentIndex > 0) {
+        prevPostButton.removeClass("hidden");
+    } else {
+        prevPostButton.addClass("hidden")
+    }
+
+    if(currentIndex < populatedPosts.length - 1) {
+        nextPostButton.removeClass("hidden");
+    } else {
+        nextPostButton.addClass("hidden");
+    }
 
     appContent.hide();
 
@@ -711,6 +773,8 @@ function populateResults(data, callback = null) {
             leftColumn.append(image);
             leftHeight += imgHeight;
         }
+
+        populatedPosts.push(post);
 
         image[0].onload = () => {
             populated++;
