@@ -390,6 +390,7 @@ $(document).ready(function () {
     //         this.history.back();
     //     }
     // });
+
 });
 
 function checkTagCache(domain) {
@@ -677,7 +678,8 @@ function openPost(post, overrideScrollY) {
         nextPostButton.addClass("hidden");
     }
 
-    appContent.hide();
+    if(window.innerWidth < 900) 
+        appContent.hide();
 
     fullscreenVideo.hide();
     fullscreenImage.show();
