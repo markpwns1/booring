@@ -1,0 +1,8 @@
+{
+    "short_name": "Booring",
+    "name": "Booring",
+    "id": "booring",
+    "display": "standalone",
+    "background_color": "#000000",
+    "description": "A browser for several Booru sites."
+}

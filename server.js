@@ -98,6 +98,10 @@ app.get("/proxy/json/*", (req, res) => {
         });
 });
 
+app.get("/manifest.json", (req, res) => {
+    res.sendFile(__dirname + "/manifest.json");
+});
+
 function getData(url, res, headers) {
     axios.get(url, {
         responseType: 'stream',
