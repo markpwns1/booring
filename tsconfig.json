@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "outDir": "res",
+        "alwaysStrict": true
+    },
+    "files": [
+        "src/index.ts"
+    ]
+}

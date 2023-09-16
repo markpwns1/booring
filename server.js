@@ -83,7 +83,7 @@ const fillTemplate = (template, dict) => {
     return template;
 }
 
-app.use(express.static('res'));
+app.use(express.static(__dirname + '/res'));
 
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
@@ -137,6 +137,11 @@ app.get("/r34/*", (req, res) => {
         "Referrer": "https://rule34.xxx/index.php?page=tags&s=list",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0"
     });
+});
+
+app.get("/download/*", (req, res) => {
+    const url = req.url.substring(10);
+    getData(url, res, { });
 });
 
 app.get("/danbooru-vid/*", (req, res) => {
