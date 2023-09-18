@@ -106,6 +106,8 @@ export default class Frontend {
                 const tag = this.$searchInput.val() as string;
                 this.addSearchTag(tag);
                 this.$searchInput.val("");
+                this.$autocompleteTags.empty();
+                this.$autocompleteTags.hide();
             }
         }
         else if(event.key == "ArrowDown") {
@@ -143,7 +145,7 @@ export default class Frontend {
 
         Site.current.autocomplete(this.$searchInput.val() as string, tags => {
             this.updateAutocompleteTags(tags);
-        }, error => {
+        }, () => { }, error => {
             console.error(error);   
         });
     }
@@ -346,11 +348,27 @@ export default class Frontend {
             site: Site.current
         };
 
-        Site.current.search(this.searchTags, this.currentPage, (posts, endOfResults) => {
-            if(!additive)
-                this.clearResults();
-            this.populateResults(posts, endOfResults);
-        }, error => console.error(error));
+        Site.current.search(this.searchTags, this.currentPage, 
+            async (posts) => {
+                await Promise.all(posts.map(this.addPost.bind(this)));
+            }, 
+            (newPage, endOfResults) => {
+                this.currentPage = newPage;
+                if(endOfResults) {
+                    this.$resultsFooterText.text("No more images found.");
+                    this.$btnFooterSearch.show();
+                    this.$btnLoadMore.hide();
+                    this.$btnCancelSearch.hide();
+                }
+                else {
+                    this.$resultsFooterText.text("");
+                    this.$btnFooterSearch.hide();
+                    this.$btnLoadMore.show();
+                    this.$btnCancelSearch.hide();
+                }
+            },
+            error => console.error(error)
+        );
 
         this.hideSearchView();
     }
@@ -395,23 +413,23 @@ export default class Frontend {
         });
     }
 
-    public static async populateResults(posts: Post[], endOfResults = false) {
+    // public static async populateResults(posts: Post[], endOfResults = false) {
         
-        await Promise.all(posts.map(this.addPost.bind(this)));
+    //     await Promise.all(posts.map(this.addPost.bind(this)));
 
-        if(endOfResults) {
-            this.$resultsFooterText.text("No more images found.");
-            this.$btnFooterSearch.show();
-            this.$btnLoadMore.hide();
-            this.$btnCancelSearch.hide();
-        }
-        else {
-            this.$resultsFooterText.text("Currently showing " + this.posts.length + " images.");
-            this.$btnFooterSearch.hide();
-            this.$btnLoadMore.show();
-            this.$btnCancelSearch.hide();
-        }
-    }
+    //     if(endOfResults) {
+    //         this.$resultsFooterText.text("No more images found.");
+    //         this.$btnFooterSearch.show();
+    //         this.$btnLoadMore.hide();
+    //         this.$btnCancelSearch.hide();
+    //     }
+    //     else {
+    //         this.$resultsFooterText.text("Currently showing " + this.posts.length + " images.");
+    //         this.$btnFooterSearch.hide();
+    //         this.$btnLoadMore.show();
+    //         this.$btnCancelSearch.hide();
+    //     }
+    // }
 
     public static unselectAutocompleteTags() {
         this.selectedAutocompleteTag = -1;
@@ -562,6 +580,10 @@ export default class Frontend {
                     this.$postDownscaleWarning.hide();
                 }
             };
+
+            postImg.onerror = () => {
+                this.$postImage.attr("src", post.getThumbnail());
+            }
         }
 
         this.$postInfoHeader.text(`${post.site.name} #${post.id}`);

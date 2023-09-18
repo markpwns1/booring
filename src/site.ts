@@ -14,14 +14,18 @@ export default class Site {
     public onRegistered() { }
     public onSelected() { }
 
-    public autocomplete(tag: string, onComplete: (tags: AutocompleteTag[]) => void, onError: (error: any) => void) {
-        onError("Autocomplete not implemented");
+    protected wait(ms): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    public autocomplete(tag: string, send: (posts: AutocompleteTag[]) => void, complete: () => void, error: (error: any) => void) {
+        error("Autocomplete not implemented");
     }
 
     public abortAutocomplete() { }
 
-    public search(tags: string[], page: number, onComplete: (posts: Post[], endOfResults: boolean) => void, onError: (error: any) => void) { 
-        onError("Search not implemented");
+    public search(tags: string[], page: number, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) { 
+        error("Search not implemented");
     }
 
     public abortSearch() { }

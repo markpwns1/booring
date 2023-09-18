@@ -1,7 +1,7 @@
-import Post from "./post";
-import Site from "./site";
-import AutocompleteTag from "./autocomplete-tag";
-import TagType from "./tag-type";
+import Post from "../post";
+import Site from "../site";
+import AutocompleteTag from "../autocomplete-tag";
+import TagType from "../tag-type";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
     "g": "General",
@@ -35,7 +35,7 @@ export default class Danbooru extends Site {
         }
     }
 
-    public override autocomplete(tag: string, onComplete: (tags: AutocompleteTag[]) => void, onError: (error: any) => void) {
+    public override autocomplete(tag: string, send: (posts: AutocompleteTag[]) => void, complete: () => void, error: (error: any) => void) {
 
         this.abortAutocomplete();
 
@@ -47,7 +47,7 @@ export default class Danbooru extends Site {
         }
 
         if(tag.length < 3) {
-            onComplete([]);
+            complete();
             return;
         }
 
@@ -63,11 +63,12 @@ export default class Danbooru extends Site {
                 tags.push(tag);
             }
 
-            onComplete(tags);
+            send(tags);
+            complete();
         })
         .fail(err => {
             if(err.statusText === "abort") return;
-            onError(err);
+            error(err);
         });
     }
 
@@ -77,7 +78,7 @@ export default class Danbooru extends Site {
         }
     }
 
-    public override search(tags: string[], page: number, onComplete: (posts: Post[], endOfResults: boolean) => void, onError: (error: any) => void) {
+    public override search(tags: string[], page: number, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) {
         this.abortSearch();
 
         const url = encodeURI(`https://danbooru.donmai.us/posts.json?page=${page+1}&limit=20&tags=${tags.join(" ")}`);
@@ -128,8 +129,9 @@ export default class Danbooru extends Site {
             }
 
             console.log("Search successful");
-            onComplete(posts, json.length < 20);
+            send(posts);
+            complete(page, posts.length < 20);
         })
-        .fail(onError);
+        .fail(error);
     }
 }

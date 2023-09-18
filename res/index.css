@@ -243,6 +243,10 @@ select option {
     margin-left: 10px;
 }
 
+#search-site {
+    background-color: var(--bg-col-2);
+}
+
 #btn-exit-search {
     float: left;
 }
@@ -338,7 +342,7 @@ select option {
     color: rgb(53, 198, 74);
 }
 
-.tag-general {
+.tag-general, .tag-tags {
     color: rgb(0, 155, 230);
 }
 
