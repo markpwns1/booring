@@ -1,5 +1,7 @@
 import Danbooru from "./sites/danbooru";
 import Gelbooru from "./sites/gelbooru";
+import Yandere from "./sites/yandere";
+import Safebooru from "./sites/safebooru";
 import Site from "./site";
 
 function register(site: Site) {
@@ -9,5 +11,7 @@ function register(site: Site) {
 
 export default function registerAll() {
     register(new Danbooru());
-    register(new Gelbooru());
+    register(Gelbooru);
+    register(new Yandere());
+    register(new Safebooru());
 }

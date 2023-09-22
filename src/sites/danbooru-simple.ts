@@ -58,8 +58,8 @@ export default class Danbooru extends Site {
             for(const result of json) {
                 const tag = new AutocompleteTag();
                 tag.value = negation + result.value;
+                tag.label = `${tag.value} (${result.post_count})`;
                 tag.type = TYPE_TO_ENUM[result.category] || TagType.Other;
-                tag.count = result.post_count;
                 tags.push(tag);
             }
 

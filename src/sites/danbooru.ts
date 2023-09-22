@@ -3,6 +3,7 @@ import Site from "../site";
 import AutocompleteTag from "../autocomplete-tag";
 import TagType from "../tag-type";
 import { asyncGetJSON } from "../util";
+import { SiteTemplate } from "../site-template";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
     "g": "General",
@@ -35,47 +36,34 @@ export default class Danbooru extends Site {
     private activeAutocompleteRequest: JQuery.jqXHR | null = null;
     private activeSearchRequest: JQuery.jqXHR | null = null;
 
+    private wait(ms): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     public override abortAutocomplete(): void {
         if(this.activeAutocompleteRequest) {
             this.activeAutocompleteRequest.abort();
+            this.activeAutocompleteRequest = null;
         }
     }
 
+    private static autocompleteTransformFunction(json: any): AutocompleteTag {
+        const tag = new AutocompleteTag();
+        tag.label = `${json.label} (${json.post_count})`;
+        tag.value = json.value;
+        tag.type = TYPE_TO_ENUM[json.category] || TagType.Other;
+        return tag;
+    }
+
+    private autocompleter = SiteTemplate.generateAutocompleterFromURL(
+        "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]={tag}",
+        Danbooru.autocompleteTransformFunction,
+        { minLength: 3 }
+    );
+
     public override autocomplete(tag: string, send: (posts: AutocompleteTag[]) => void, complete: () => void, error: (error: any) => void) {
-
         this.abortAutocomplete();
-
-        tag = tag.trim();
-        let negation = "";
-        if(tag.startsWith("-")) {
-            negation = "-";
-            tag = tag.substring(1);
-        }
-
-        if(tag.length < 3) {
-            complete();
-            return;
-        }
-
-        const url = encodeURI(`https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]=${tag}`);
-        this.activeAutocompleteRequest = $.getJSON(url, json => {
-            const tags: AutocompleteTag[] = [];
-
-            for(const result of json) {
-                const tag = new AutocompleteTag();
-                tag.value = negation + result.value;
-                tag.type = TYPE_TO_ENUM[result.category] || TagType.Other;
-                tag.count = result.post_count;
-                tags.push(tag);
-            }
-
-            send(tags);
-            complete();
-        })
-        .fail(err => {
-            if(err.statusText === "abort") return;
-            error(err);
-        });
+        this.activeSearchRequest = this.autocompleter(tag, send, complete, error) as JQuery.jqXHR || this.activeSearchRequest;
     }
 
     public override abortSearch(): void {

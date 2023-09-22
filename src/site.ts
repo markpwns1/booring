@@ -11,12 +11,10 @@ export default class Site {
     public autocompleteEnabled: boolean = false;
     public isPorn: boolean = false;
 
+    constructor() { }
+
     public onRegistered() { }
     public onSelected() { }
-
-    protected wait(ms): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
     public autocomplete(tag: string, send: (posts: AutocompleteTag[]) => void, complete: () => void, error: (error: any) => void) {
         error("Autocomplete not implemented");

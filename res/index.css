@@ -328,6 +328,7 @@ select option {
     width: 100%;
     text-align: left;
     padding: 3px 10px;
+    word-wrap: break-word;
 }
 
 .tag-artist {
@@ -348,6 +349,10 @@ select option {
 
 .tag-meta {
     color: rgb(234, 208, 132);
+}
+
+.tag-circle {
+    color: #0bb;
 }
 
 #pane-right {

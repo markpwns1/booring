@@ -117,6 +117,18 @@ function getData(url, res, headers) {
     });
 }
 
+app.get("/pixiv-autocomplete/*", (req, res) => {
+    const url = req.url.substring(20);
+    getData(url, res, { 
+        "Host": "www.pixiv.net",
+        "Referrer": "https://www.pixiv.net/en/tags/%E7%94%B7%E3%81%AE%E5%AD%90%20%E5%B0%91%E5%A5%B3/artworks?s_mode=s_tag",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0",
+        "Connection": "keep-alive",
+        "Accept": "application/json",
+        "x-user-id": "46414691",
+    });
+});
+
 app.get("/gelbooru-img/*", (req, res) => {
     const url = req.url.substring(14);
     getData(url, res, { 

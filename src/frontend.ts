@@ -103,6 +103,8 @@ export default class Frontend {
                 $tag.trigger("click");
             } 
             else {
+                this.suppressAutocomplete = true;
+
                 const tag = this.$searchInput.val() as string;
                 this.addSearchTag(tag);
                 this.$searchInput.val("");
@@ -140,6 +142,11 @@ export default class Frontend {
     private static onSearchInputChange() {
         if(this.suppressAutocomplete) {
             this.suppressAutocomplete = false;
+            return;
+        }
+
+        if(!Site.current.autocompleteEnabled) {
+            this.$autocompleteTags.hide();
             return;
         }
 
@@ -458,7 +465,7 @@ export default class Frontend {
 
         this.$autocompleteTags.empty();
         for(const tag of tags) {
-            const $tag = $(`<button class="autocomplete-tag tag-${tag.type}">${tag.value} ${tag.count ? (" (" + tag.count + ")") : ""}</button>`);
+            const $tag = $(`<button class="autocomplete-tag tag-${tag.type}">${tag.label}</button>`);
             $tag.on("click touchstart", event => {
                 this.suppressAutocomplete = true;
 
@@ -716,7 +723,11 @@ export default class Frontend {
         this.$selectSearchSite.on("change", event => {
             const site = Site.sites.find(site => site.id === this.$selectSearchSite.val() as string);
             Site.current = site;
+            site.onSelected();
+            this.$autocompleteTags.empty();
+            this.$autocompleteTags.hide();
         });
+
         Site.current = Site.sites[0];
 
         this.$btnSearch.on("click", event => {

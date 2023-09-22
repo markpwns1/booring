@@ -4,6 +4,7 @@ enum TagType {
     Character = "character",
     General = "general",
     Meta = "meta",
+    Circle = "circle",
     Other = "other"
 }
 
