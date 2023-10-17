@@ -825,7 +825,7 @@ export default class Frontend {
         if(urlParams.has("tags")) {
             const tags = urlParams.get("tags").split(",").map(tag => tag.trim());
             for(const tag of tags) {
-                this.addSearchTag(tag);
+                if(tag.trim() !== "") this.addSearchTag(tag);
             }
             this.search();
         }

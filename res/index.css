@@ -466,7 +466,7 @@ select option {
 @media (max-width: 1000px) {
     * {
         box-shadow: none !important;
-        filter: none !important;
+        /* filter: none !important; */
     }
 
     #pane-left {
