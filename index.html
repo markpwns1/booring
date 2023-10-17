@@ -7,86 +7,76 @@
         <link rel="manifest" href="manifest.json">
     </head>
     <body>
-        <div id="content">
-            <div id="search">
-                <button id="search-btn">Search</button>
-                <select id="domain-select">
-                    <option value="danbooru">danbooru</option>
-                    <option value="gelbooru">gelbooru</option>
-                    <option value="yandere">yande.re</option>
-                    <option class="advanced-domain" value="rule34">rule34.xxx</option>
-                </select>
-                <div id="header-right-side">
-                    <a id="help-btn" href="help.html" target="_blank">Help</a>
-                    <button id="clear-cached-tags">Clear Cache</button>
-                </div>
-                <textarea type="text" id="search-box" spellcheck="false">rating:g
-aether_(genshin_impact)
-lumine_(genshin_impact)
-kimono
--venti_(genshin_impact)</textarea>
-                <div id="suggestions"></div>
-            </div>
-            <div id="results">
-                <div id="column-1" class="column"></div>
-                <div id="column-2" class="column"></div>
-                <span id="initial-text">Enter your search term above, one per line, and click "search"</span>
-            </div>
-            <div id="footer">
-                <button id="more-btn" hidden>Show More</button>
-                <span id="loading-msg" hidden>Loading...</span>
-            </div>
-        </div>
-        <div id="fullscreen-container" hidden>
-            <div>
-                <img id="fullscreen-image" class="fullscreen-content" />
-                <video controls loop id="fullscreen-video" class="fullscreen-content">
-                    <source id="fullscreen-video-src" type="video/mp4"></source>
-                </video>
-            </div>
-            <div id="danbooru-post-info">
-                <div id="post-top-bar">
-                    <a id="prev-post" href="#">&lt;&lt;</a>
-                    <div id="downscale-info">
-                        <span id="downscale-warning"></span> <a id="view-original" target="_blank">(view original)</a> 
+        <div id="app">
+            <div id="view-default">
+                <div id="pane-left">
+                    <div id="header">
+                        <h1 id="header-title">booring</h1>
+                        <img id="header-search" tabindex="1" src="icon-search.png">
                     </div>
-                    <a id="next-post" href="#">&gt;&gt;</a>
+                    <div id="results-placeholder">
+                        <img id="results-placeholder-image" src="icon-search.png">
+                        <h2>Search for something!<br>Results will show up here.</h2>
+                    </div>
+                    <div id="results-scrollview">
+                        <div id="results" style="display: none;">
+                            <div id="results-column-left"></div>
+                            <div id="results-column-right"></div>
+                        </div>
+                        <div id="results-footer" style="display: none;">
+                            <span id="results-footer-text"></span>
+                            <button id="btn-load-more" style="display: none;">Show more...</button>
+                            <button id="btn-different-search" style="display: none;">Try another search...</button>
+                            <button id="btn-cancel-search" style="display: none;">Cancel</button>
+                        </div>
+                    </div>
                 </div>
-                <a id="fullscreen-close" href="#" onclick="return false">Back</a>
-                <h3>Information</h3>
-                <p>
-                    ID: <span id="danbooru-post-id"></span> <a id="copy-link" href="#" onclick="return false">(copy link)</a> <a id="danbooru-open-post" target="_blank">(open original post)</a><br>
-                    Date: <span id="danbooru-post-date"></span><br>
-                    Size: <span id="danbooru-post-filesize" target="_blank"></span><br>
-                    Source: <a id="danbooru-post-source" target="_blank"></a><br> 
-                    Rating: <span id="danbooru-post-rating"></span><br>
-                    Score: <span id="danbooru-post-score"></span><br>
-                    Favourites: <span id="danbooru-post-fav-count"></span><br>
-                </p>
-                <div id="danbooru-artist-section">
-                    <h4>Artist</h4>
-                    <span id="danbooru-artist-tags" class="taglist tag-artist"></span>
+                <div id="pane-right">
+                    <div id="post-placeholder">
+                        <img id="results-placeholder-image" src="icon-image.png">
+                        <h2>Click on an image!<br>The full post will appear here.</h2>
+                    </div>
+                    <div id="post" style="display: none;">
+                        <img id="btn-close-post" src="icon-close.png">
+                        <video id="post-video" controls loop muted style="display: none;"></video>
+                        <img id="post-image">
+                        <div id="post-top-bar">
+                            <button id="btn-prev-post" href="#" class="">&lt;&lt;</button>
+                            <div id="post-downscale-info">
+                                <span id="post-downscale-warning">Resized to 49% of original</span><button id="btn-view-fullsize" target="_blank" href="https://cdn.donmai.us/original/da/fa/dafa58d3f6a53b65461c7e9a0d1ab3e3.jpg">Open Full-size Image</button> 
+                            </div>
+                            <button id="btn-next-post" href="#" class="">&gt;&gt;</button>
+                        </div>
+                        <div id="post-body">
+                            <h2 id="post-info-header">Information</h2>
+                            <div id="post-action-section">
+                                <button id="btn-copy-link">Copy Link</button>
+                                <button id="btn-open-original" _target="blank">Open Original Post</button>
+                                <button id="btn-download" _target="blank">Download</button>
+                            </div>
+                            <!-- <span class="post-property"><b>Site</b>: <span id="post-property-site"></span></span>
+                            <span class='post-property'><b>ID</b>: <span id="post-property-id" ></span></span> -->
+                            <div id="post-info"></div>
+                            <div id="post-tag-types"></div>
+                        </div>
+                    </div>
                 </div>
-                <div id="danbooru-copyright-section">
-                    <h4>Copyright</h4>
-                    <span id="danbooru-copyright-tags" class="taglist tag-copyright"></span>
+            </div>
+            <div id="view-search" style="display: none;">
+                <div style="height: 30px">
+                    <button id="btn-search">Search</button><select id="search-site">
+                    </select> <button id="btn-exit-search">Back</button>
                 </div>
-                <div id="danbooru-character-section">
-                    <h4>Characters</h4>
-                    <span id="danbooru-character-tags" class="taglist tag-character"></span>
+                <div><h2 id="search-tag-header-no-tags">NO TAGS SELECTED</h2></div>
+                <div id="search-tag-display">
+                    <h2 id="search-tag-header">SELECTED TAGS</h2><button id="btn-clear">Clear All</button>
+                    <div id="search-current-tags"></div>
                 </div>
-                <div id="danbooru-general-section">
-                    <h4>General</h4>
-                    <span id="danbooru-general-tags" class="taglist tag-general"></span>
-                </div>
-                <div id="danbooru-meta-section">
-                    <h4>Meta</h4>
-                    <span id="danbooru-meta-tags" class="taglist tag-meta"></span>
-                </div>
+                <input id="search-input" type="text" placeholder="Enter tag here..."></textarea>
+                <div id="search-autocomplete"></div>
             </div>
         </div>
         <script src="jquery-new.js"></script>
-        <script src="core.js"></script>
-        <script src="index.js"></script>
+        <script src="bundle.js"></script>
     </body>
 </html>
