@@ -236,7 +236,7 @@ select option {
     margin-left: 10px;
 }
 
-#btn-search, #search-site {
+#btn-search, #search-site, #btn-safe-search {
     display: block;
     float: right;
     text-align: right;
@@ -502,6 +502,7 @@ select option {
     #post-image, #post-video {
         height: auto;
         max-height: none;
+        object-fit: contain;
     }
 
     #btn-close-post {

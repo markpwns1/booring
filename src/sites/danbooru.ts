@@ -3,7 +3,7 @@ import Site from "../site";
 import AutocompleteTag from "../autocomplete-tag";
 import TagType from "../tag-type";
 import { asyncGetJSON } from "../util";
-import { SiteTemplate } from "../site-template";
+import { SiteBuilder } from "../site-builder";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
     "g": "General",
@@ -55,7 +55,7 @@ export default class Danbooru extends Site {
         return tag;
     }
 
-    private autocompleter = SiteTemplate.generateAutocompleterFromURL(
+    private autocompleter = SiteBuilder.generateNetworkAutocompleter(
         "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]={tag}",
         Danbooru.autocompleteTransformFunction,
         { minLength: 3 }
@@ -90,10 +90,10 @@ export default class Danbooru extends Site {
         post.originalPost = `https://danbooru.donmai.us/posts/${result.id}`;
 
         post.properties = {
-            "Date": result.created_at.split("T")[0],
+            "Rating": RATINGS_TO_STRING[result.rating],
             "Size": `${Math.round(result.file_size / 1000)} KB (${result.image_width}x${result.image_height})`,
             "Source": result.source,
-            "Rating": RATINGS_TO_STRING[result.rating],
+            "Date": result.created_at.split("T")[0],
             "Score": result.score.toString(),
             "Favourites": result.fav_count.toString()
         };
@@ -173,7 +173,12 @@ export default class Danbooru extends Site {
         };
     }
 
-    public override async search(tags: string[], page: number, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) {
+    public override async search(tags: string[], page: number, safeSearch: boolean, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) {
+        
+        if(safeSearch && !tags.includes("rating:general")) {
+            tags.push("rating:general");
+        }
+        
         const { untaxedTags, taxedTags, negatedTags } = this.analyseTags(tags);
 
         if(taxedTags.length < 3) {
@@ -211,7 +216,7 @@ export default class Danbooru extends Site {
         const manualIncludeTags = includeSorted.slice(twoLeastPopularIncludes.length);
         const manualExcludeTags = excludeSorted.slice(twoMostPopularExcludes.length);
 
-        console.log(tags, searchTags, manualIncludeTags, manualExcludeTags);
+        // console.log(tags, searchTags, manualIncludeTags, manualExcludeTags);
 
         let successfulPosts = 0;
         let pageIncrement = 0;
