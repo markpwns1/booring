@@ -11,6 +11,7 @@ export default class Frontend {
     private static lastSearch?: {
         tags: string[];
         page: number;
+        safeSearch: boolean;
         site: Site;
     };
 
@@ -25,6 +26,7 @@ export default class Frontend {
 
     private static leftColumnHeight = 0;
     private static rightColumnHeight = 0;
+    private static safeSearchEnabled = true;
 
     private static $viewSearch: JQuery<HTMLElement>;
     private static $btnHeaderSearch: JQuery<HTMLElement>;
@@ -67,6 +69,7 @@ export default class Frontend {
     private static $paneLeft: JQuery<HTMLElement>;
     private static $paneRight: JQuery<HTMLElement>;
     private static $postInfoHeader: JQuery<HTMLElement>;
+    private static $btnSafeSearch: JQuery<HTMLElement>;
 
     private static postTagTypes: { [key: string]: JQuery<HTMLElement> } = { };
     private static postProperties: { [key: string]: JQuery<HTMLElement> } = { };
@@ -328,12 +331,16 @@ export default class Frontend {
             && Site.current == this.lastSearch.site
             && this.arraySetEquals(this.searchTags, this.lastSearch.tags) 
             && this.currentPage == this.lastSearch.page
+            && this.safeSearchEnabled == this.lastSearch.safeSearch
         ) {
             console.log("Same search. Cancelling.");
             return;
         }
 
         console.log("Searching: " + this.searchTags.join(", "));
+
+        // Set URL to reflect search
+        window.history.replaceState({}, "", `?${this.safeSearchEnabled? "" : "nsfw=true&"}site=${Site.current.id}&tags=${this.searchTags.join(",")}`);
 
         if(!additive)
             this.currentPage = 0;
@@ -352,10 +359,11 @@ export default class Frontend {
         this.lastSearch = {
             tags: [...this.searchTags],
             page: this.currentPage,
+            safeSearch: this.safeSearchEnabled,
             site: Site.current
         };
 
-        Site.current.search(this.searchTags, this.currentPage, 
+        Site.current.search([ ...this.searchTags ], this.currentPage, this.safeSearchEnabled,
             async (posts) => {
                 await Promise.all(posts.map(this.addPost.bind(this)));
             }, 
@@ -573,7 +581,7 @@ export default class Frontend {
                 const scale = Math.round(postImg.height / postImg.naturalHeight * 100);
                 const fullSizeScale = Math.round(postImg.naturalHeight / post.fullHeight * 100);
                 if(postImg.naturalHeight < postImg.height) {
-                    if(scale > 175 && imageResolutionIndex < post.imageResolutions.length - 1) {
+                    if(scale > 150 && imageResolutionIndex < post.imageResolutions.length - 1) {
                         imageResolutionIndex++;
                         this.$postImage.attr("src", post.imageResolutions[imageResolutionIndex]);
                     }
@@ -703,6 +711,7 @@ export default class Frontend {
         
         this.$paneLeft = $("#pane-left");
         this.$paneRight = $("#pane-right");
+        this.$btnSafeSearch = $("#btn-safe-search");
     
         this.$btnHeaderSearch.on("click", this.onHeaderSearchClick.bind(this));
         this.$searchInput.on("keydown", this.onSearchInputKeyDown.bind(this));
@@ -719,7 +728,7 @@ export default class Frontend {
             this.hideSearchView();
         });
     
-        this.$selectSearchSite.append(Site.sites.map(site => `<option value="${site.id}">${site.name}</option>`).join(""));
+        this.$selectSearchSite.append(Site.sites.map(site => `<option value="${site.id}" ${site.isPorn? 'class="nsfw-site"' : ""}>${site.name}</option>`).join(""));
         this.$selectSearchSite.on("change", event => {
             const site = Site.sites.find(site => site.id === this.$selectSearchSite.val() as string);
             Site.current = site;
@@ -727,6 +736,12 @@ export default class Frontend {
             this.$autocompleteTags.empty();
             this.$autocompleteTags.hide();
         });
+
+        if(this.safeSearchEnabled) {
+            const nsfwSites = this.$selectSearchSite.children(".nsfw-site");
+            nsfwSites.attr("disabled", "");
+            nsfwSites.attr("hidden", "");
+        }
 
         Site.current = Site.sites[0];
 
@@ -768,6 +783,52 @@ export default class Frontend {
         this.$postInfoHeader.on("click", event => {
             console.log(this.openedPost);
         });
+
+        this.$btnSafeSearch.on("click", event => {
+            event.stopPropagation();
+
+            if(this.safeSearchEnabled && !confirm("Are you sure you want to disable safe search?\n\nThis will allow sensitive or pornographic content to be displayed, as well as include new sites in the site dropdown that contain such content.")) {
+                return;
+            }
+
+            this.safeSearchEnabled = !this.safeSearchEnabled;
+            this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
+
+            const nsfwSites = this.$selectSearchSite.children(".nsfw-site");
+            if(this.safeSearchEnabled) {
+                nsfwSites.attr("disabled", "");
+                nsfwSites.attr("hidden", "");
+            }
+            else {
+                nsfwSites.removeAttr("disabled");
+                nsfwSites.removeAttr("hidden");
+            }
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const nsfw = urlParams.has("nsfw")? urlParams.get("nsfw") === "true" : false;
+        this.safeSearchEnabled = !nsfw;
+        this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
+        
+
+        if(urlParams.has("site")) {
+            const siteId = urlParams.get("site");
+            const site = Site.sites.find(site => site.id === siteId && (nsfw || !site.isPorn));
+            if(site) {
+                Site.current = site;
+                site.onSelected();
+                this.$selectSearchSite.val(siteId);
+            }
+        }
+
+        if(urlParams.has("tags")) {
+            const tags = urlParams.get("tags").split(",").map(tag => tag.trim());
+            for(const tag of tags) {
+                if(tag.trim() !== "") this.addSearchTag(tag);
+            }
+            this.search();
+        }
 
         console.log("Frontend ready!");
     }

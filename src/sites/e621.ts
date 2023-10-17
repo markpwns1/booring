@@ -5,10 +5,9 @@ import AutocompleteTag from "../autocomplete-tag";
 import { proxify } from "../util";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
-    "general": "General",
-    "sensitive": "Sensitive",
-    "questionable": "Questionable",
-    "explicit": "Explicit"
+    "s": "Safe",
+    "q": "Questionable",
+    "e": "Explicit"
 };
 
 const TYPE_TO_ENUM: { [key: string]: TagType } = {
@@ -85,7 +84,6 @@ const Gelbooru = SiteBuilder.Generate({
         transformer: autocompleteTransformFunction
     },
     searchUrl: proxify("json", "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=20&pid={page}&tags={tags}"),
-    safeSearchTag: "rating:general",
     searchPreprocessor: (json: any) => json.post,
     searchTransformer: postTransformFunction
 });

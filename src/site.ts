@@ -22,9 +22,15 @@ export default class Site {
 
     public abortAutocomplete() { }
 
-    public search(tags: string[], page: number, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) { 
+    public search(tags: string[], page: number, safeSearch: boolean, send: (posts: Post[]) => void, complete: (newPage: number, endOfResults: boolean) => void, error: (error: any) => void) { 
         error("Search not implemented");
     }
 
     public abortSearch() { }
+
+    public getPostByID(id: string): Promise<Post> {
+        return new Promise((resolve, reject) => {
+            reject("getPostByID not implemented");
+        });
+    }
 }

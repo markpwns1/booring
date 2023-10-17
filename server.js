@@ -9,6 +9,25 @@ const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const PROXIES = {
+    "generic": { },
+    "gelbooru": {
+        "Referrer": "https://gelbooru.com/"
+    },
+    "yandere": {
+        "Referrer": "https://yande.re/"
+    },
+    "rule34": {
+        "Referrer": "https://rule34.xxx/",
+    },
+    "konachan": {
+        "Referrer": "https://konachan.com/"
+    },
+    "zerochan": {
+        "Referrer": "https://www.zerochan.net/"
+    }
+}
+
 const HTML_TEMPLATE = fs.readFileSync("embed.html", "utf-8");
 
 const postCache = { };
@@ -96,6 +115,17 @@ app.get("/proxy/json/*", (req, res) => {
             res.sendStatus(500);
             console.log(err)
         });
+});
+
+app.get("/proxy/:site/*", (req, res) => {
+    if(!req.params.site || !(req.params.site in PROXIES)) {
+        res.sendStatus(500);
+        return;
+    }
+
+    const index = 8 + req.params.site.length;
+    const url = req.url.substring(index);
+    getData(url, res, PROXIES[req.params.site]);
 });
 
 app.get("/manifest.json", (req, res) => {
@@ -188,12 +218,12 @@ function generateMetaProperties(table) {
 app.get("/post/:domain/:postID", (req, res) => {
     if(req.params.postID == "undefined") return;
     const domain = req.params.domain;
-    const domainName = DOMAIN_TO_NAME[domain];
+    // const domainName = DOMAIN_TO_NAME[domain];
 
-    if(!domainName) {
-        res.sendStatus(500);
-        return;
-    }
+    // if(!domainName) {
+    //     res.sendStatus(500);
+    //     return;
+    // }
 
     lookupPost(domain, req.params.postID, post => {
         if(post == 404 || post == 500) {
