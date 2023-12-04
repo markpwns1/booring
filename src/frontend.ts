@@ -824,6 +824,7 @@ export default class Frontend {
 
         if(urlParams.has("tags")) {
             const tags = urlParams.get("tags").split(",").map(tag => tag.trim());
+            if(tags.length == 1 && tags[0] == "landscape") tags.push("no_humans");
             for(const tag of tags) {
                 if(tag.trim() !== "") this.addSearchTag(tag);
             }
@@ -843,6 +844,7 @@ export default class Frontend {
 
         if(urlParams.has("q")) {
             const tags = urlParams.get("q").split(",").map(tag => tag.trim());
+            if(tags.length == 1 && tags[0] == "landscape") tags.push("no_humans");
             for(const tag of tags) {
                 if(tag.trim() !== "") this.addSearchTag(tag);
             }
