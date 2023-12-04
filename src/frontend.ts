@@ -830,6 +830,25 @@ export default class Frontend {
             this.search();
         }
 
+        if(urlParams.has("domain")) {
+            const siteId = urlParams.get("domain");
+            const site = Site.sites.find(site => site.id === siteId && (nsfw || !site.isPorn));
+            if(site) {
+                Site.current = site;
+                site.onSelected();
+                this.$selectSearchSite.val(site.id);
+                this.search();
+            }
+        }
+
+        if(urlParams.has("q")) {
+            const tags = urlParams.get("q").split(",").map(tag => tag.trim());
+            for(const tag of tags) {
+                if(tag.trim() !== "") this.addSearchTag(tag);
+            }
+            this.search();
+        }
+
         console.log("Frontend ready!");
     }
 }
