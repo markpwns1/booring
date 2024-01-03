@@ -86,7 +86,7 @@ const Gelbooru = SiteBuilder.Generate({
     },
     searchUrl: proxify("json", "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=20&pid={page}&tags={tags}"),
     safeSearchTag: "rating:general",
-    searchPreprocessor: (json: any) => json.post,
+    searchPreprocessor: (json: any) => json.post || [],
     searchTransformer: postTransformFunction
 });
 
