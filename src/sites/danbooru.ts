@@ -49,7 +49,12 @@ export default class Danbooru extends Site {
 
     private static autocompleteTransformFunction(json: any): AutocompleteTag {
         const tag = new AutocompleteTag();
-        tag.label = `${json.label} (${json.post_count})`;
+        if(json.post_count) {
+            tag.label = `${json.label} (${json.post_count})`;
+        }
+        else {
+            tag.label = json.label;
+        }
         tag.value = json.value;
         tag.type = TYPE_TO_ENUM[json.category] || TagType.Other;
         return tag;
@@ -181,7 +186,7 @@ export default class Danbooru extends Site {
         
         const { untaxedTags, taxedTags, negatedTags } = this.analyseTags(tags);
 
-        if(taxedTags.length < 3) {
+        if(taxedTags.length + negatedTags.length < 3) {
             try {
                 const result = await this.simpleSearch(tags, page);
                 send(result.posts);
