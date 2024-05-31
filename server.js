@@ -5,6 +5,7 @@ const express = require('express');
 const core = require("./res/core");
 const fs = require('fs');
 const http = require('http');
+const https = require('https');
 const axios = require('axios');
 const app = express();
 const port = process.env.PORT || 3000;
@@ -135,10 +136,15 @@ app.get("/manifest.json", (req, res) => {
     res.sendFile(__dirname + "/manifest.json");
 });
 
+const agent = new https.Agent({  
+    rejectUnauthorized: false
+});
+
 function getData(url, res, headers) {
     axios.get(url, {
         responseType: 'stream',
-        headers: headers
+        headers: headers,
+        httpsAgent: agent
     })
     .then((stream) => {
         res.writeHead(stream.status, stream.headers)

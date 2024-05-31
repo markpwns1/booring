@@ -35,7 +35,7 @@ function postTransformFunction(json: any): Post {
         const image = post.imageResolutions[i];
         if(image.includes("mp4") || image.includes("webm")) {
             var uri = new URL(image);
-            post.imageResolutions[i] = proxify("rule34", "https://uswebm.rule34.xxx/" + uri.pathname + "?" + post.id + "=");
+            post.imageResolutions[i] = proxify("rule34", "https://ahri2mp4.rule34.xxx/" + uri.pathname + "?" + post.id + "=");
         }
     }
 

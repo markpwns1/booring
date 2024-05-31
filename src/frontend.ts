@@ -356,6 +356,8 @@ export default class Frontend {
         if(!additive)
             this.clearResults();
 
+        let selectPost = this.searchTags.some(x => x.startsWith("id:"));
+
         this.lastSearch = {
             tags: [...this.searchTags],
             page: this.currentPage,
@@ -366,9 +368,14 @@ export default class Frontend {
         Site.current.search([ ...this.searchTags ], this.currentPage, this.safeSearchEnabled,
             async (posts) => {
                 await Promise.all(posts.map(this.addPost.bind(this)));
+                if(selectPost && this.posts.length > 0) {
+                    this.openPost(this.posts[0]);
+                    selectPost = false;
+                }
             }, 
             (newPage, endOfResults) => {
                 this.currentPage = newPage;
+                
                 if(endOfResults) {
                     this.$resultsFooterText.text("No more images found.");
                     this.$btnFooterSearch.show();
@@ -535,6 +542,21 @@ export default class Frontend {
         this.$searchCurrentTags.empty();
         this.$searchTagDisplay.hide();
         this.$searchTagHeaderNoTags.show();
+    }
+
+    public static setSafeSearchEnabled(enabled: boolean) {
+        this.safeSearchEnabled = enabled;
+        this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
+
+        const nsfwSites = this.$selectSearchSite.children(".nsfw-site");
+        if(this.safeSearchEnabled) {
+            nsfwSites.attr("disabled", "");
+            nsfwSites.attr("hidden", "");
+        }
+        else {
+            nsfwSites.removeAttr("disabled");
+            nsfwSites.removeAttr("hidden");
+        }
     }
 
     public static openPost(post: Post, onComplete?: () => void) {
@@ -791,18 +813,7 @@ export default class Frontend {
                 return;
             }
 
-            this.safeSearchEnabled = !this.safeSearchEnabled;
-            this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
-
-            const nsfwSites = this.$selectSearchSite.children(".nsfw-site");
-            if(this.safeSearchEnabled) {
-                nsfwSites.attr("disabled", "");
-                nsfwSites.attr("hidden", "");
-            }
-            else {
-                nsfwSites.removeAttr("disabled");
-                nsfwSites.removeAttr("hidden");
-            }
+            this.setSafeSearchEnabled(!this.safeSearchEnabled);
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -811,10 +822,9 @@ export default class Frontend {
         this.safeSearchEnabled = !nsfw;
         this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
         
-
-        if(urlParams.has("site")) {
-            const siteId = urlParams.get("site");
-            const site = Site.sites.find(site => site.id === siteId && (nsfw || !site.isPorn));
+        if(urlParams.has("domain") || urlParams.has("site")) {
+            const siteId = urlParams.get("domain") || urlParams.get("site");
+            const site = Site.sites.find(site => site.id === siteId);
             if(site) {
                 Site.current = site;
                 site.onSelected();
@@ -822,28 +832,8 @@ export default class Frontend {
             }
         }
 
-        if(urlParams.has("tags")) {
-            const tags = urlParams.get("tags").split(",").map(tag => tag.trim());
-            if(tags.length == 1 && tags[0] == "landscape") tags.push("no_humans");
-            for(const tag of tags) {
-                if(tag.trim() !== "") this.addSearchTag(tag);
-            }
-            this.search();
-        }
-
-        if(urlParams.has("domain")) {
-            const siteId = urlParams.get("domain");
-            const site = Site.sites.find(site => site.id === siteId && (nsfw || !site.isPorn));
-            if(site) {
-                Site.current = site;
-                site.onSelected();
-                this.$selectSearchSite.val(site.id);
-                this.search();
-            }
-        }
-
-        if(urlParams.has("q")) {
-            const tags = urlParams.get("q").split(",").map(tag => tag.trim());
+        if(urlParams.has("tags") || urlParams.has("q")) {
+            const tags = (urlParams.get("tags") || urlParams.get("q")).split(",").map(tag => tag.trim());
             if(tags.length == 1 && tags[0] == "landscape") tags.push("no_humans");
             for(const tag of tags) {
                 if(tag.trim() !== "") this.addSearchTag(tag);
