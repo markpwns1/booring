@@ -1,13 +1,20 @@
 {
     "compilerOptions": {
         "module": "CommonJS",
-        "outDir": "res",
+        "outDir": "public",
         "baseUrl": ".",
         "paths": {
             "@booring/*": [ "./src/core/*" ]
         },
         "strict": true,
         "alwaysStrict": true
+    },
+    "typedocOptions": {
+        "entryPoints": [ 
+            "./src/core"
+        ],
+        "entryPointStrategy": "expand",
+        "out": "doc"
     },
     "include": [
         "./src/**/*.ts"

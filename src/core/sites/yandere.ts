@@ -46,7 +46,7 @@ function postTransformFunction(json: any): Post {
     return post;
 }
 
-const Yandere = SiteBuilder.Generate({
+const Yandere = SiteBuilder.buildSite({
     name: "Yande.re",
     id: "yandere",
     isPorn: false,

@@ -1,10 +1,27 @@
+
+/**
+ * Main class representing an embed, as seen in Discord or Twitter
+ */
 export default class Embed {
+    /** The title to display */
     public title: string;
+
+    /** The description to display. Ideally this should be a list of tags */
     public description: string;
+
+    /** The URL to the original site's page for this post */
     public url?: string;
+
+    /** The image to display in the embed */
     public imageUrl?: string;
 
+    /** 
+     * A set of key-value pairs to include in the embed. For each entry, the following will
+     * be appended: `<meta property="[key]" contents="[value]" />`
+     */
     public properties: { [key: string]: string } = { };
+
+    /** Extra HTML code for the embed, usually containing more meta properties. Use responsibly */
     public extra: string = "";
 
     public constructor(title: string, description: string) {
@@ -12,6 +29,11 @@ export default class Embed {
         this.description = description;
     }
 
+    /**
+     * Constructs a set of meta tags to include in a site's `<head>` to enable embeds on sites
+     * like Twitter or Discord.
+     * @returns The HTML code to include
+     */
     public build(): string {
         return `
             <!-- Primary Meta Tags -->

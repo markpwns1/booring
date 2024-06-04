@@ -7,6 +7,9 @@ import Konachan from "./sites/konachan";
 import Zerochan from "./sites/zerochan";
 import Site from "./site";
 
+/**
+ * Registers all the supported sites
+ */
 export default function registerAll() {
     Site.register(new Danbooru());
     Site.register(Gelbooru);

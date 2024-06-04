@@ -1,35 +1,92 @@
 
 import Site from "./site";
-import { jQueryFetch } from "./util";
+import { getJsonPromise } from "./util";
 import AutocompleteTag from "./autocomplete-tag";
 import TagType from "./tag-type";
 
+/**
+ * A static class containing functionality for cached autocomplete styles, where the cache is of the format:
+ * ```text
+ * 3`firsttag`alias` 0`secondtag` 4`thirdtag` ...
+ * ```
+ */
 export default class CachedAutocomplete {
 
-    public static async verifyCache(site: Site, summaryUrl: string, referenceVersion: string) {
+    /**
+     * Given a site and a summary URL to query a new cache from, updates the cache if necessary
+     * @param site The cache 
+     * @param summaryUrl 
+     * @param referenceVersion 
+     * @returns A promise for a string with the cache in it
+     */
+    public static async verifyCache(site: Site, summaryUrl: string, referenceVersion: string): Promise<string> {
+        let tags: string;
         if(localStorage.getItem(site.id + "-version") != referenceVersion || Date.now() - parseInt(localStorage.getItem(site.id + "-last-update") || "0") > 1000 * 60 * 60 * 24 * 7) {
             
             console.log(`Fetching ${site.name} tags from summary page: ${summaryUrl}`);
             let response;
             try {
-                response = await jQueryFetch(summaryUrl);
+                response = await getJsonPromise(summaryUrl);
             }
             catch(e) {
-                console.log(`Could not fetch ${site.name} (${site.id}) tags from summary page`);
+                const msg = `Could not fetch ${site.name} (${site.id}) tags from summary page`;
+                console.log(msg);
                 console.error(e);
-                return;
+                throw new Error(msg);
             }
 
             localStorage.setItem(site.id + "-version", referenceVersion);
             localStorage.setItem(site.id + "-last-update", Date.now().toString());
             localStorage.setItem(site.id + "-tags", response.data);
+            tags = response.data;
+
             console.log(`Updated ${site.name} (${site.id}) tag cache`);
         }
         else {
             console.log(`Found ${site.name} (${site.id}) tag cache`);
+            tags = localStorage.getItem(site.id + "-tags")!;
         }
 
-        return localStorage.getItem(site.id + "-tags");
+        return tags;
+    }
+
+    /**
+     * Given a partial tag, returns a list of autocomplete tags
+     * @param tag The partial tag
+     * @param cachedTags The cache to grab potential tags from
+     * @param tagTypeMap A map of number to TagType
+     * @returns A list of autocomplete tags to autocomplete the given tag
+     */
+    public static complete(tag: string, cachedTags: string, tagTypeMap: { [key: string | number]: TagType }): AutocompleteTag[] {
+        const { negation, baseTag } = AutocompleteTag.decompose(tag);
+
+        if(baseTag.length == 0 || cachedTags == "") {
+            return [];
+        }
+
+        const regex = this.createTagSearchRegex(baseTag, { global: true });
+
+        let results = this.retrieveTagSearch(regex, cachedTags, { max_results: 100 });
+        results = this.reorderSearchResults(baseTag, results);
+        results = results.slice(0, 10);
+
+        if ('sqe'.indexOf(baseTag) != -1)
+            results.unshift('0`' + baseTag + '` ');
+
+        const tags: AutocompleteTag[] = [];
+
+        for(const match of results) {
+            const m = match.match(/(\d+)`([^`]*)`(([^ ]*)`)? /);
+            if (!m) {
+                console.error('Unparsable cached tag: \'' + match + '\'');
+                return [];
+            }
+                
+            const value = negation + m[2];
+            tags.push(new AutocompleteTag(value, value, tagTypeMap[m[1]] || TagType.Other));
+        }
+
+        return tags;
     }
 
     private static createTagSearchRegex(tag: string, options: { top_results_only?: boolean, global?: boolean } = {}): RegExp {
@@ -146,37 +203,4 @@ export default class CachedAutocomplete {
     
         return topResults.concat(bottomResults);
     }
-
-    public static complete(tag: string, cachedTags: string, tagTypeMap: { [key: string | number]: TagType }): AutocompleteTag[] {
-        const { negation, baseTag } = AutocompleteTag.decompose(tag);
-
-        if(baseTag.length == 0 || cachedTags == "") {
-            return [];
-        }
-
-        const regex = this.createTagSearchRegex(baseTag, { global: true });
-
-        let results = this.retrieveTagSearch(regex, cachedTags, { max_results: 100 });
-        results = this.reorderSearchResults(baseTag, results);
-        results = results.slice(0, 10);
-
-        if ('sqe'.indexOf(baseTag) != -1)
-            results.unshift('0`' + baseTag + '` ');
-
-        const tags: AutocompleteTag[] = [];
-
-        for(const match of results) {
-            const m = match.match(/(\d+)`([^`]*)`(([^ ]*)`)? /);
-            if (!m) {
-                console.error('Unparsable cached tag: \'' + match + '\'');
-                return [];
-            }
-                
-            const value = negation + m[2];
-            tags.push(new AutocompleteTag(value, value, tagTypeMap[m[1]] || TagType.Other));
-        }
-
-        return tags;
-    }
-
 }

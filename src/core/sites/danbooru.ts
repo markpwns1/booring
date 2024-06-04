@@ -2,7 +2,7 @@ import Post from "../post";
 import Site from "../site";
 import AutocompleteTag from "../autocomplete-tag";
 import TagType from "../tag-type";
-import { jQueryFetch } from "../util";
+import { getJsonPromise } from "../util";
 import { SiteBuilder } from "../site-builder";
 import Embed from "@booring/embed";
 
@@ -57,7 +57,7 @@ export default class Danbooru extends Site {
         );
     }
 
-    private autocompleter = SiteBuilder.generateNetworkAutocompleter(
+    private autocompleter = SiteBuilder.buildNetworkAutocomplete(
         "https://danbooru.donmai.us/autocomplete.json?only=name,post_count,category&limit=10&search[type]=tag_query&search[query]={tag}",
         Danbooru.autocompleteTransformFunction,
         { minLength: 3 }
@@ -197,7 +197,7 @@ export default class Danbooru extends Site {
         
         let tagsInfo: { name: string, post_count: number }[];
         try {
-            tagsInfo = await jQueryFetch(`https://danbooru.donmai.us/tags.json?search[name_comma]=${allTaxedTags.join(",")}`) as { name: string, post_count: number }[];
+            tagsInfo = await getJsonPromise(`https://danbooru.donmai.us/tags.json?search[name_comma]=${allTaxedTags.join(",")}`) as { name: string, post_count: number }[];
         }
         catch (err) {
             error(err);
@@ -260,22 +260,17 @@ export default class Danbooru extends Site {
         }
     }
 
-    public override getPostByID(fetchJSON: (url: string) => Promise<any>, id: string): Promise<Post> {
-        return new Promise((resolve, reject) => {
-            fetchJSON("https://danbooru.donmai.us/posts.json?tags=id:" + id)
-            .then(json => {
-                const first = json[0];
-                if(first) {
-                    try {
-                        resolve(this.parsePost(first));
-                    } catch (e: any) {
-                        reject("Could not parse returned JSON with error '" + e + "' and JSON: " + JSON.stringify(json, null, 2));
-                    }
-                }
-                else reject("Post with ID '" + id + "' not found. Received: " + JSON.stringify(json, null, 2));
-            })
-            .catch(reject);
-        });
+    public override async getPostByID(fetchJSON: (url: string) => Promise<any>, id: string): Promise<Post> {
+        const json = await fetchJSON("https://danbooru.donmai.us/posts.json?tags=id:" + id);
+        const first = json[0];
+        if(first) {
+            try {
+                return this.parsePost(first);
+            } catch (e: any) {
+                throw new Error("Could not parse returned JSON with error '" + e + "' and JSON: " + JSON.stringify(json, null, 2));
+            }
+        }
+        else throw new Error("Post with ID '" + id + "' not found. Received: " + JSON.stringify(json, null, 2));
     }
 
     public override generateEmbed(post: Post): Embed {

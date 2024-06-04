@@ -3,7 +3,7 @@ import AutocompleteTag from "../autocomplete-tag";
 import Post from "../post";
 import { SiteBuilder } from "../site-builder";
 import TagType from "../tag-type";
-import { jQueryFetch, proxify } from "../util";
+import { getJsonPromise, proxify } from "../util";
 
 const TYPE_TO_ENUM: { [key: string]: TagType } = {
     "theme": TagType.General,
@@ -56,7 +56,7 @@ function postTransformFunction(json: any): Post {
     return post;
 }
 
-const Zerochan = SiteBuilder.Generate({
+const Zerochan = SiteBuilder.buildSite({
     name: "Zerochan",
     id: "zerochan",
     isPorn: false,

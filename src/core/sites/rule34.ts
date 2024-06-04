@@ -62,7 +62,7 @@ function postTransformFunction(json: any): Post {
     return post;
 }
 
-const Rule34 = SiteBuilder.Generate({
+const Rule34 = SiteBuilder.buildSite({
     name: "Rule 34",
     id: "rule34",
     isPorn: true,
