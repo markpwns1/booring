@@ -1,6 +1,6 @@
 
 import Site from "./site";
-import { asyncGetJSON } from "./util";
+import { jQueryFetch } from "./util";
 import AutocompleteTag from "./autocomplete-tag";
 import TagType from "./tag-type";
 
@@ -12,10 +12,10 @@ export default class CachedAutocomplete {
             console.log(`Fetching ${site.name} tags from summary page: ${summaryUrl}`);
             let response;
             try {
-                response = await asyncGetJSON(summaryUrl);
+                response = await jQueryFetch(summaryUrl);
             }
             catch(e) {
-                console.log(`Could not fetch ${site.name} tags from summary page`);
+                console.log(`Could not fetch ${site.name} (${site.id}) tags from summary page`);
                 console.error(e);
                 return;
             }
@@ -23,13 +23,13 @@ export default class CachedAutocomplete {
             localStorage.setItem(site.id + "-version", referenceVersion);
             localStorage.setItem(site.id + "-last-update", Date.now().toString());
             localStorage.setItem(site.id + "-tags", response.data);
-            console.log(`Updated ${site.name} tag cache`);
+            console.log(`Updated ${site.name} (${site.id}) tag cache`);
         }
         else {
-            console.log(`Found ${site.name} tag cache`);
+            console.log(`Found ${site.name} (${site.id}) tag cache`);
         }
 
-        return localStorage.getItem("yandere-tags");
+        return localStorage.getItem(site.id + "-tags");
     }
 
     private static createTagSearchRegex(tag: string, options: { top_results_only?: boolean, global?: boolean } = {}): RegExp {
@@ -147,10 +147,10 @@ export default class CachedAutocomplete {
         return topResults.concat(bottomResults);
     }
 
-    public static complete(tag: string, cachedTags: string, tagTypeMap: { [key: string | number]: TagType }) {
+    public static complete(tag: string, cachedTags: string, tagTypeMap: { [key: string | number]: TagType }): AutocompleteTag[] {
         const { negation, baseTag } = AutocompleteTag.decompose(tag);
 
-        if(baseTag.length == 0) {
+        if(baseTag.length == 0 || cachedTags == "") {
             return [];
         }
 
@@ -169,14 +169,11 @@ export default class CachedAutocomplete {
             const m = match.match(/(\d+)`([^`]*)`(([^ ]*)`)? /);
             if (!m) {
                 console.error('Unparsable cached tag: \'' + match + '\'');
-                return;
+                return [];
             }
                 
-            const tag = new AutocompleteTag();
-            tag.value = negation + m[2];
-            tag.label = tag.value;
-            tag.type = tagTypeMap[m[1]] || TagType.Other;
-            tags.push(tag);
+            const value = negation + m[2];
+            tags.push(new AutocompleteTag(value, value, tagTypeMap[m[1]] || TagType.Other));
         }
 
         return tags;

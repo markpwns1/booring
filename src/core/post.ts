@@ -2,18 +2,22 @@ import type Site from "./site";
 
 export default class Post {
     public site: Site;
-    public id: string;
+    public id: string = "";
     public requiresVideoPlayer = false;
 
-    public imageResolutions: string[];
+    public imageResolutions: string[] = [];
 
-    public fullWidth: number;
-    public fullHeight: number;
+    public fullWidth: number = -1;
+    public fullHeight: number = -1;
 
-    public originalPost: string;
+    public originalPost: string = "";
 
-    public properties: { [key: string]: string };
-    public tagTypes: { [key: string]: string[]}
+    public properties: { [key: string]: string } = { };
+    public tagTypes: { [key: string]: string[]} = { };
+
+    public constructor(site: Site) {
+        this.site = site;
+    }
 
     public normalisedHeight() {
         return this.fullHeight / this.fullWidth;

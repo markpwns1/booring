@@ -13,9 +13,8 @@ function autocompleteTransformFunction(json: any): AutocompleteTag {
 }
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Safebooru);
 
-    post.site = Safebooru;
     post.id = json.id.toString();
 
     post.imageResolutions = [

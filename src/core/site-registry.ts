@@ -7,17 +7,12 @@ import Konachan from "./sites/konachan";
 import Zerochan from "./sites/zerochan";
 import Site from "./site";
 
-function register(site: Site) {
-    Site.sites.push(site);
-    site.onRegistered();
-}
-
 export default function registerAll() {
-    register(new Danbooru());
-    register(Gelbooru);
-    register(Yandere);
-    register(Safebooru);
-    register(Konachan);
-    register(Zerochan);
-    register(Rule34);
+    Site.register(new Danbooru());
+    Site.register(Gelbooru);
+    Site.register(Yandere);
+    Site.register(Safebooru);
+    Site.register(Konachan);
+    Site.register(Zerochan);
+    Site.register(Rule34);
 }

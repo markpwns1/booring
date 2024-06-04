@@ -2,8 +2,9 @@ import Post from "../post";
 import Site from "../site";
 import AutocompleteTag from "../autocomplete-tag";
 import TagType from "../tag-type";
-import { asyncGetJSON } from "../util";
+import { jQueryFetch } from "../util";
 import { SiteBuilder } from "../site-builder";
+import Embed from "@booring/embed";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
     "g": "General",
@@ -27,16 +28,17 @@ interface SearchResult {
 
 export default class Danbooru extends Site {
 
-    public override name = "Danbooru";
-    public override id = "danbooru";
-
     public override autocompleteEnabled = true;
     public override isPorn = false;
 
     private activeAutocompleteRequest: JQuery.jqXHR | null = null;
     private activeSearchRequest: JQuery.jqXHR | null = null;
 
-    private wait(ms): Promise<void> {
+    public constructor() {
+        super("Danbooru", "danbooru");
+    }
+
+    private wait(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
@@ -48,16 +50,11 @@ export default class Danbooru extends Site {
     }
 
     private static autocompleteTransformFunction(json: any): AutocompleteTag {
-        const tag = new AutocompleteTag();
-        if(json.post_count) {
-            tag.label = `${json.label} (${json.post_count})`;
-        }
-        else {
-            tag.label = json.label;
-        }
-        tag.value = json.value;
-        tag.type = TYPE_TO_ENUM[json.category] || TagType.Other;
-        return tag;
+        return new AutocompleteTag(
+            json.post_count? `${json.label} (${json.post_count})` : json.label,
+            json.value,
+            TYPE_TO_ENUM[json.category] || TagType.Other
+        );
     }
 
     private autocompleter = SiteBuilder.generateNetworkAutocompleter(
@@ -77,44 +74,43 @@ export default class Danbooru extends Site {
         }
     }
 
-    private danbooruPostToBooringPost(result: any): Post {
-        if(!result.preview_file_url && !result.large_file_url && !result.file_url) {
-            return null;
+    public override parsePost(json: any): Post {
+        if(!json.preview_file_url && !json.large_file_url && !json.file_url) {
+            throw new Error("Post does not contain any image");
         }
 
-        const post = new Post();
+        const post = new Post(this);
 
-        post.site = this;
-        post.id = result.id.toString();
+        post.id = json.id.toString();
 
-        post.imageResolutions = [ result.preview_file_url, result.large_file_url, result.file_url ];
+        post.imageResolutions = [ json.preview_file_url, json.large_file_url, json.file_url ];
 
-        post.fullWidth = result.image_width;
-        post.fullHeight = result.image_height;
+        post.fullWidth = json.image_width;
+        post.fullHeight = json.image_height;
 
-        post.originalPost = `https://danbooru.donmai.us/posts/${result.id}`;
+        post.originalPost = `https://danbooru.donmai.us/posts/${json.id}`;
 
         post.properties = {
-            "Rating": RATINGS_TO_STRING[result.rating],
-            "Size": `${Math.round(result.file_size / 1000)} KB (${result.image_width}x${result.image_height})`,
-            "Source": result.source,
-            "Date": result.created_at.split("T")[0],
-            "Score": result.score.toString(),
-            "Favourites": result.fav_count.toString()
+            "Rating": RATINGS_TO_STRING[json.rating],
+            "Size": `${Math.round(json.file_size / 1000)} KB (${json.image_width}x${json.image_height})`,
+            "Source": json.source,
+            "Date": json.created_at.split("T")[0],
+            "Score": json.score.toString(),
+            "Favourites": json.fav_count.toString()
         };
 
         post.tagTypes = {
-            "Artist": result.tag_string_artist.split(" "),
-            "Copyright": result.tag_string_copyright.split(" "),
-            "Character": result.tag_string_character.split(" "),
-            "General": result.tag_string_general.split(" "),
-            "Meta": result.tag_string_meta.split(" ")
+            "Artist": json.tag_string_artist.split(" "),
+            "Copyright": json.tag_string_copyright.split(" "),
+            "Character": json.tag_string_character.split(" "),
+            "General": json.tag_string_general.split(" "),
+            "Meta": json.tag_string_meta.split(" ")
         }
 
-        post.requiresVideoPlayer = result.large_file_url.endsWith(".webm") 
-            || result.large_file_url.endsWith(".mp4") 
-            || result.file_url.endsWith(".webm") 
-            || result.file_url.endsWith(".mp4");
+        post.requiresVideoPlayer = json.large_file_url.endsWith(".webm") 
+            || json.large_file_url.endsWith(".mp4") 
+            || json.file_url.endsWith(".webm") 
+            || json.file_url.endsWith(".mp4");
 
         return post;
     }
@@ -143,7 +139,7 @@ export default class Danbooru extends Site {
                 const posts: Post[] = [];
 
                 for(const result of json) {
-                    const post = this.danbooruPostToBooringPost(result);
+                    const post = this.parsePost(result);
                     if(post) posts.push(post);
                 }
 
@@ -201,7 +197,7 @@ export default class Danbooru extends Site {
         
         let tagsInfo: { name: string, post_count: number }[];
         try {
-            tagsInfo = await asyncGetJSON(`https://danbooru.donmai.us/tags.json?search[name_comma]=${allTaxedTags.join(",")}`) as { name: string, post_count: number }[];
+            tagsInfo = await jQueryFetch(`https://danbooru.donmai.us/tags.json?search[name_comma]=${allTaxedTags.join(",")}`) as { name: string, post_count: number }[];
         }
         catch (err) {
             error(err);
@@ -241,7 +237,7 @@ export default class Danbooru extends Site {
                     if(manualIncludeTags.some(x => !tags.includes(x))) continue;
                     if(manualExcludeTags.some(x => tags.includes(x))) continue;
 
-                    const booringPost = this.danbooruPostToBooringPost(post);
+                    const booringPost = this.parsePost(post);
                     if(booringPost) posts.push(booringPost);
                 }
 
@@ -262,5 +258,30 @@ export default class Danbooru extends Site {
             }
             pageIncrement++;
         }
+    }
+
+    public override getPostByID(fetchJSON: (url: string) => Promise<any>, id: string): Promise<Post> {
+        return new Promise((resolve, reject) => {
+            fetchJSON("https://danbooru.donmai.us/posts.json?tags=id:" + id)
+            .then(json => {
+                const first = json[0];
+                if(first) {
+                    try {
+                        resolve(this.parsePost(first));
+                    } catch (e: any) {
+                        reject("Could not parse returned JSON with error '" + e + "' and JSON: " + JSON.stringify(json, null, 2));
+                    }
+                }
+                else reject("Post with ID '" + id + "' not found. Received: " + JSON.stringify(json, null, 2));
+            })
+            .catch(reject);
+        });
+    }
+
+    public override generateEmbed(post: Post): Embed {
+        const embed = new Embed("Danbooru #" + post.id, Object.values(post.tagTypes).join(" "));
+        embed.url = "https://danbooru.donmai.us/posts/" + post.id;
+        embed.imageUrl = post.getLargeImage();
+        return embed;
     }
 }

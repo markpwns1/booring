@@ -1,6 +1,6 @@
-import type AutocompleteTag from "./autocomplete-tag";
-import Post from "./post";
-import Site from "./site";
+import type AutocompleteTag from "@booring/autocomplete-tag";
+import Post from "@booring/post";
+import Site from "@booring/site";
 
 export default class Frontend {
 
@@ -213,7 +213,7 @@ export default class Frontend {
     private static onCopyButtonPressed(event: JQuery.ClickEvent) {
         event.stopPropagation();
 
-        const url = `${window.location.origin}/post/${this.openedPost.site.id}/${this.openedPost.id}`;
+        const url = `${window.location.origin}/post/${this.openedPost!.site.id}/${this.openedPost!.id}`;
 
         const textArea = document.createElement("textarea");
           
@@ -264,9 +264,9 @@ export default class Frontend {
     private static onDownloadButtonPressed(event: JQuery.ClickEvent) {
         event.stopPropagation();
 
-        const url = window.location.origin + "/download/" + this.openedPost.getFullSizeImage();
+        const url = window.location.origin + "/download/" + this.openedPost!.getFullSizeImage();
         const fileExtension = url.split(".").pop();
-        const filename = `${this.openedPost.site.id}-${this.openedPost.id}.${fileExtension}`;
+        const filename = `${this.openedPost!.site.id}-${this.openedPost!.id}.${fileExtension}`;
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
@@ -365,7 +365,7 @@ export default class Frontend {
             site: Site.current
         };
 
-        Site.current.search([ ...this.searchTags ], this.currentPage, this.safeSearchEnabled,
+        Site.current.search([ ...this.searchTags ], this.currentPage, this.safeSearchEnabled && !selectPost,
             async (posts) => {
                 await Promise.all(posts.map(this.addPost.bind(this)));
                 if(selectPost && this.posts.length > 0) {
@@ -750,11 +750,11 @@ export default class Frontend {
             this.hideSearchView();
         });
     
-        this.$selectSearchSite.append(Site.sites.map(site => `<option value="${site.id}" ${site.isPorn? 'class="nsfw-site"' : ""}>${site.name}</option>`).join(""));
+        this.$selectSearchSite.append(Site.getAll().map(site => `<option value="${site.id}" ${site.isPorn? 'class="nsfw-site"' : ""}>${site.name}</option>`).join(""));
         this.$selectSearchSite.on("change", event => {
-            const site = Site.sites.find(site => site.id === this.$selectSearchSite.val() as string);
-            Site.current = site;
-            site.onSelected();
+            const site = Site.find(this.$selectSearchSite.val() as string);
+            Site.current = site!;
+            Site.current.onSelected();
             this.$autocompleteTags.empty();
             this.$autocompleteTags.hide();
         });
@@ -765,7 +765,7 @@ export default class Frontend {
             nsfwSites.attr("hidden", "");
         }
 
-        Site.current = Site.sites[0];
+        Site.current = Site.getAll()[0];
 
         this.$btnSearch.on("click", event => {
             event.stopPropagation();
@@ -780,13 +780,13 @@ export default class Frontend {
 
         this.$btnViewFullsize.on("click", event => {
             event.stopPropagation();
-            window.open(this.openedPost.getFullSizeImage(), "_blank");
+            window.open(this.openedPost!.getFullSizeImage(), "_blank");
             this.$btnViewFullsize.trigger("blur");
         });
 
         this.$btnOpenOriginalPost.on("click", event => {
             event.stopPropagation();
-            window.open(this.openedPost.originalPost, "_blank");
+            window.open(this.openedPost!.originalPost, "_blank");
             this.$btnOpenOriginalPost.trigger("blur");
         });
 
@@ -823,8 +823,8 @@ export default class Frontend {
         this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
         
         if(urlParams.has("domain") || urlParams.has("site")) {
-            const siteId = urlParams.get("domain") || urlParams.get("site");
-            const site = Site.sites.find(site => site.id === siteId);
+            const siteId = (urlParams.get("domain") || urlParams.get("site"))!;
+            const site = Site.find(siteId);
             if(site) {
                 Site.current = site;
                 site.onSelected();
@@ -833,7 +833,7 @@ export default class Frontend {
         }
 
         if(urlParams.has("tags") || urlParams.has("q")) {
-            const tags = (urlParams.get("tags") || urlParams.get("q")).split(",").map(tag => tag.trim());
+            const tags = (urlParams.get("tags") || urlParams.get("q"))!.split(",").map(tag => tag.trim());
             if(tags.length == 1 && tags[0] == "landscape") tags.push("no_humans");
             for(const tag of tags) {
                 if(tag.trim() !== "") this.addSearchTag(tag);

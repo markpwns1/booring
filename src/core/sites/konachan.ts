@@ -13,16 +13,15 @@ const RATINGS_TO_STRING: { [key: string]: string } = {
 const KONACHAN_VERSION = "1";
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Konachan);
 
-    post.site = Konachan;
     post.id = json.id.toString();
 
     post.imageResolutions = [ 
         json.preview_url, 
-        json.sample_url, 
-        json.jpeg_url,
-        json.file_url
+        proxify("konachan", json.sample_url), 
+        proxify("konachan", json.jpeg_url),
+        proxify("konachan", json.file_url)
     ];
 
     post.fullWidth = json.width;
@@ -50,6 +49,9 @@ const Konachan = SiteBuilder.Generate({
     name: "Konachan",
     id: "konachan",
     isPorn: false,
+    proxyHeaders: {
+        "Referrer": "https://konachan.com/"
+    },
     autocompleteModule: {
         summaryUrl: proxify("json", "https://konachan.com/tag/summary.json"),
         version: KONACHAN_VERSION,

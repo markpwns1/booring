@@ -1,6 +1,6 @@
 
 import Frontend from "./frontend";
-import registerAll from "./site-registry";
+import registerAll from "@booring/site-registry";
 
 registerAll();
 

@@ -2,9 +2,14 @@
     "compilerOptions": {
         "module": "CommonJS",
         "outDir": "res",
+        "baseUrl": ".",
+        "paths": {
+            "@booring/*": [ "./src/core/*" ]
+        },
+        "strict": true,
         "alwaysStrict": true
     },
-    "files": [
-        "src/index.ts"
+    "include": [
+        "./src/**/*.ts"
     ]
 }

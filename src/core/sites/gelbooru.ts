@@ -30,9 +30,8 @@ function autocompleteTransformFunction(json: any): AutocompleteTag {
 }
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Gelbooru);
 
-    post.site = Gelbooru;
     post.id = json.id.toString();
 
     post.imageResolutions = [ 
@@ -80,6 +79,9 @@ const Gelbooru = SiteBuilder.Generate({
     name: "Gelbooru",
     id: "gelbooru",
     isPorn: false,
+    proxyHeaders: {
+        "Referrer": "https://gelbooru.com/"
+    },
     autocompleteModule: {
         url: proxify("json", "https://gelbooru.com/index.php?page=autocomplete2&type=tag_query&limit=10&term={tag}"),
         transformer: autocompleteTransformFunction

@@ -13,9 +13,8 @@ const RATINGS_TO_STRING: { [key: string]: string } = {
 const YANDERE_VERSION = "1";
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Yandere);
 
-    post.site = Yandere;
     post.id = json.id.toString();
 
     post.imageResolutions = [ 

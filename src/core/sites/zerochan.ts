@@ -3,7 +3,7 @@ import AutocompleteTag from "../autocomplete-tag";
 import Post from "../post";
 import { SiteBuilder } from "../site-builder";
 import TagType from "../tag-type";
-import { asyncGetJSON, proxify } from "../util";
+import { jQueryFetch, proxify } from "../util";
 
 const TYPE_TO_ENUM: { [key: string]: TagType } = {
     "theme": TagType.General,
@@ -23,9 +23,8 @@ function autocompleteTransformFunction(json: any): AutocompleteTag {
 }
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Zerochan);
 
-    post.site = Zerochan;
     post.id = json.id.toString();
 
     post.imageResolutions = [ 
@@ -61,6 +60,9 @@ const Zerochan = SiteBuilder.Generate({
     name: "Zerochan",
     id: "zerochan",
     isPorn: false,
+    proxyHeaders: {
+        "Referrer": "https://www.zerochan.net/"
+    },
     autocompleteModule: {
         url: proxify("generic", "https://www.zerochan.net/suggest?q={tag}&json=1&limit=10"),
         preprocessor: json => json.suggestions,

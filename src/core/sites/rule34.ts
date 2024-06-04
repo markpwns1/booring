@@ -20,9 +20,8 @@ function autocompleteTransformFunction(json: any): AutocompleteTag {
 }
 
 function postTransformFunction(json: any): Post {
-    const post = new Post();
+    const post = new Post(Rule34);
 
-    post.site = Rule34;
     post.id = json.id.toString();
 
     post.imageResolutions = [ json.preview_url, json.file_url ];
@@ -67,6 +66,12 @@ const Rule34 = SiteBuilder.Generate({
     name: "Rule 34",
     id: "rule34",
     isPorn: true,
+    proxyHeaders: {
+        "Referrer": "https://rule34.xxx/",
+        "Referer": "https://rule34.xxx/",
+        "Host": "rule34.xxx",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+    },
     autocompleteModule: {
         url: proxify("rule34", "https://rule34.xxx/public/autocomplete.php?q={tag}"),
         transformer: autocompleteTransformFunction
