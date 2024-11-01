@@ -7,7 +7,8 @@
             "@booring/*": [ "./src/core/*" ]
         },
         "strict": true,
-        "alwaysStrict": true
+        "alwaysStrict": true,
+        "sourceMap": true
     },
     "typedocOptions": {
         "entryPoints": [ 

@@ -1,6 +1,7 @@
 import type AutocompleteTag from "@booring/autocomplete-tag";
 import Post from "@booring/post";
 import Site from "@booring/site";
+import { proxify } from "@booring/util";
 
 export default class Frontend {
 
@@ -264,7 +265,7 @@ export default class Frontend {
     private static onDownloadButtonPressed(event: JQuery.ClickEvent) {
         event.stopPropagation();
 
-        const url = window.location.origin + "/download/" + this.openedPost!.getFullSizeImage();
+        const url = proxify(Site.current.id, this.openedPost!.getFullSizeImage());
         const fileExtension = url.split(".").pop();
         const filename = `${this.openedPost!.site.id}-${this.openedPost!.id}.${fileExtension}`;
         const a = document.createElement("a");
@@ -410,7 +411,7 @@ export default class Frontend {
             const postImg = new Image();
 
             postImg.onload = () => {
-                if(this.leftColumnHeight < this.rightColumnHeight) {
+                if(this.leftColumnHeight <= this.rightColumnHeight) {
                     this.$resultsLeftColumn.append(postImg);
                     this.leftColumnHeight += post.normalisedHeight();
                 }

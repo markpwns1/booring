@@ -139,8 +139,10 @@ export default class Danbooru extends Site {
                 const posts: Post[] = [];
 
                 for(const result of json) {
-                    const post = this.parsePost(result);
-                    if(post) posts.push(post);
+                    try { 
+                        const post = this.parsePost(result);
+                        if(post) posts.push(post);
+                    } catch (e: any) { }
                 }
 
                 resolve({
@@ -237,8 +239,10 @@ export default class Danbooru extends Site {
                     if(manualIncludeTags.some(x => !tags.includes(x))) continue;
                     if(manualExcludeTags.some(x => tags.includes(x))) continue;
 
-                    const booringPost = this.parsePost(post);
-                    if(booringPost) posts.push(booringPost);
+                    try {
+                        const booringPost = this.parsePost(post);
+                        if(booringPost) posts.push(booringPost);
+                    } catch (e: any) { }
                 }
 
                 if(posts.length === 0) emptyPages++;

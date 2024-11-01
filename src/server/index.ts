@@ -4,6 +4,7 @@ import { OutgoingHttpHeaders } from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
 import fetch from "node-fetch";
+import * as moment from "moment";
 
 import registerAll from '@booring/site-registry';
 import Site from '@booring/site';
@@ -21,6 +22,10 @@ const agent = new https.Agent({
     rejectUnauthorized: false
 });
 
+function log(type: string, msg: string) {
+    console.log(`${moment().format("YYYY-MM-DD hh:mm:ss")} [${type}] ${msg}`)
+}
+
 function getData(url: string, res: express.Response, headers: { [key: string]: string }) {
     axios.get(url, {
         responseType: 'stream',
@@ -33,13 +38,13 @@ function getData(url: string, res: express.Response, headers: { [key: string]: s
     })
     .catch(err => {
         res.sendStatus(500);
-        console.log(err)
+        log("error", err)
     });
 }
 
 app.use(express.static(__dirname + '/public'));
 app.use((req, res, next) => {
-    console.log("[request] " + req.url);
+    log("request", req.url);
     next();
 });
 
@@ -54,7 +59,7 @@ app.get("/proxy/json/*", (req, res) => {
         .then(json => res.json(json))
         .catch(err => {
             res.sendStatus(500);
-            console.log(err)
+            log("error", err)
         });
 });
 
@@ -62,11 +67,7 @@ app.get("/proxy/:site/*", (req, res) => {
     let headers: { [key: string]: string } = { };
     if(req.params.site != "generic") {
         const site = Site.find(req.params.site || "");
-        if(!site) {
-            res.sendStatus(500);
-            return;
-        }
-        headers = site.proxyHeaders;
+        if(site) headers = site.proxyHeaders;
     }
 
     const index = 8 + req.params.site.length;
@@ -125,7 +126,7 @@ app.get("/post/:domain/:id", async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Booring server listening on port ${port}!`);
+    log("info", `Booring server listening on port ${port}!`);
     registerAll();
-    console.log("Registered all sites.");
+    log("info", "Registered all sites.");
 });

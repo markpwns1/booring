@@ -128,7 +128,7 @@ select option {
 #results-scrollview {
     width: 100%;
     height: calc(100% - 46px);
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
     margin: 0;
@@ -184,7 +184,7 @@ select option {
     height: 100%;
 }
 
-#view-search {
+.popup-box {
     background-color: var(--bg-col-2);
     color: var(--text-col);
     position: fixed;
@@ -197,6 +197,28 @@ select option {
     box-shadow: 0 0 8px black;
     width: 525px;
     z-index: 1000;
+}
+
+.settings-section {
+    display: inline-block;
+    margin-right: 20px;
+}
+
+#settings-console {
+    margin-top: 10px;
+    width: 100%;
+    min-width: 100%;
+    min-height: 50px;
+    max-height: 50vh;
+    background-color: var(--bg-col-3);
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-y: scroll;
+}
+
+code {
+    font-family: monaco, Consolas, "Lucida Console", monospace;
+    font-size: 11pt;
 }
 
 #search-tag-header, #search-tag-header-no-tags {
@@ -463,6 +485,28 @@ select option {
     margin-bottom: 10px;
 }
 
+#dialog-box {
+    box-shadow: 0px 0px 8px black;
+    background-color: var(--bg-col-1);
+    border-width: 0;
+    border-radius: 5px;
+    position: fixed;
+    bottom: 10%;
+    cursor: pointer;
+}
+
+#dialog-box:hover {
+    background-color: var(--bg-col-0);
+}
+
+#post-content-holder {
+    position: relative;
+}
+
+#search-header {
+    height: 30px;
+}
+
 @media (max-width: 1000px) {
     * {
         box-shadow: none !important;
@@ -507,11 +551,38 @@ select option {
 
     #btn-close-post {
         filter: none;
+        top: unset;
+        bottom: 10px;
+    }
+
+    #header {
+        position: absolute;
+        bottom: 0px;
+    }
+
+    /* #view-search, #search-autocomplete {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    #search-tag-display, #search-tag-header-no-tags {
+        margin-top: 10px;
+        margin-bottom: 10px;
+    } */
+
+    #search-header {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--bg-col-2);
+        padding: 10px;
+        padding-bottom: 0px;
     }
 }
 
 @media (max-width: 600px) {
-    #view-search {
+    .popup-box {
         width: 100%;
         height: 100%;
         top: 0;

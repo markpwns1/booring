@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
         <title>Booring</title>
         <link rel="stylesheet" href="index.css" type="text/css" />
         <link rel="manifest" href="manifest.json">
@@ -37,9 +37,11 @@
                         <h2>Click on an image!<br>The full post will appear here.</h2>
                     </div>
                     <div id="post" style="display: none;">
-                        <img id="btn-close-post" src="icon-close.png">
-                        <video id="post-video" controls loop muted style="display: none;"></video>
-                        <img id="post-image">
+                        <div id="post-content-holder">
+                            <img id="btn-close-post" src="icon-close.png">
+                            <video id="post-video" controls loop muted style="display: none;"></video>
+                            <img id="post-image">
+                        </div>
                         <div id="post-top-bar">
                             <button id="btn-prev-post" href="#" class="">&lt;&lt;</button>
                             <div id="post-downscale-info">
@@ -62,8 +64,8 @@
                     </div>
                 </div>
             </div>
-            <div id="view-search" style="display: none;">
-                <div style="height: 30px">
+            <div class="popup-box" id="view-search" style="display: none;">
+                <div id="search-header">
                     <button id="btn-search">Search</button><select id="search-site">
                     </select><button id="btn-safe-search">Safe Search: ON</button> <button id="btn-exit-search">Back</button>
                 </div>
@@ -75,6 +77,71 @@
                 <input id="search-input" type="text" placeholder="Enter tag here..."></textarea>
                 <div id="search-autocomplete"></div>
             </div>
+            <div class="popup-box" id="view-settings" style="display: none"><!-- display: none-->
+                <div style="height: 30px">
+                    <button id="btn-exit-settings">Back</button>
+                </div>
+                <div class="settings-section">
+                    <h2>ERRORS</h2>
+                    <button id="btn-clear-cache">Copy All</button>
+                </div>
+                <div class="settings-section">
+                    <h2>AUTOCOMPLETE</h2>
+                    <button id="btn-clear-cache">Clear Cache</button>
+                </div>
+                <br>
+                <div id="settings-console"><code id="settings-console-text">Uncaught Error: Post does not contain any imagePost does not contain any image<br>
+                    parsePost danbooru.ts:79<br>
+                    activeSearchRequest danbooru.ts:142<br>
+                    jQuery 8<br>
+                    y danbooru.ts:138<br>
+                    simpleSearch danbooru.ts:134<br>
+                    y danbooru.ts:187<br>
+                    s bundle.js:1<br>
+                    s bundle.js:1<br>
+                    n bundle.js:1<br>
+                    n bundle.js:1<br>
+                    search bundle.js:1<br>
+                    search frontend.ts:368<br>
+                    main frontend.ts:841<br>
+                    jQuery 13<br>
+                    danbooru.ts:79:18<br>
+                    parsePost danbooru.ts:79<br>
+                    activeSearchRequest danbooru.ts:142<br>
+                    jQuery 8<br>
+                    y danbooru.ts:138<br>
+                    simpleSearch danbooru.ts:134<br>
+                    y danbooru.ts:187<br>
+                    s bundle.js:1<br>
+                    s bundle.js:1<br>
+                    n bundle.js:1<br>
+                    n bundle.js:1<br>
+                    search bundle.js:1<br>
+                    search frontend.ts:368<br>
+                    main frontend.ts:841<br>
+                    jQuery 13<br>
+                    danbooru.ts:79:18<br></code></div>
+            </div>
+            <dialog id="dialog-box"><b>Javascript Error</b><br>
+                <code id="error-span">
+                Uncaught Error: Post does not contain any image<br>
+                parsePost danbooru.ts:79<br>
+                activeSearchRequest danbooru.ts:142<br>
+                jQuery 8<br>
+                y danbooru.ts:138<br>
+                simpleSearch danbooru.ts:134<br>
+                y danbooru.ts:187<br>
+                s bundle.js:1<br>
+                s bundle.js:1<br>
+                n bundle.js:1<br>
+                n bundle.js:1<br>
+                search bundle.js:1<br>
+                search frontend.ts:368<br>
+                main frontend.ts:841<br>
+                jQuery 13<br>
+                danbooru.ts:79:18<br>
+            </code>
+            </dialog>
         </div>
         <script src="jquery.js"></script>
         <script src="bundle.js"></script>
