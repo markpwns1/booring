@@ -5,6 +5,7 @@ import TagType from "../tag-type";
 import { getJsonPromise } from "../util";
 import { SiteBuilder } from "../site-builder";
 import Embed from "@booring/embed";
+import { GetJSONResult, getJSON } from "@booring/get-json";
 
 const RATINGS_TO_STRING: { [key: string]: string } = {
     "g": "General",
@@ -31,8 +32,8 @@ export default class Danbooru extends Site {
     public override autocompleteEnabled = true;
     public override isPorn = false;
 
-    private activeAutocompleteRequest: JQuery.jqXHR | null = null;
-    private activeSearchRequest: JQuery.jqXHR | null = null;
+    private activeAutocompleteRequest: GetJSONResult | null = null;
+    private activeSearchRequest: GetJSONResult | null = null;
 
     public constructor() {
         super("Danbooru", "danbooru");
@@ -120,7 +121,7 @@ export default class Danbooru extends Site {
             this.abortSearch();
 
             const url = encodeURI(`https://danbooru.donmai.us/posts.json?page=${page+1}&limit=${limit}&tags=${tags.join(" ")}`);
-            this.activeSearchRequest = $.getJSON(url, json => {
+            this.activeSearchRequest = getJSON(url, json => {
                 resolve({
                     results: json,
                     endOfResults: json.length < limit
@@ -135,7 +136,7 @@ export default class Danbooru extends Site {
             this.abortSearch();
 
             const url = encodeURI(`https://danbooru.donmai.us/posts.json?page=${page+1}&limit=20&tags=${tags.join(" ")}`);
-            this.activeSearchRequest = $.getJSON(url, json => {
+            this.activeSearchRequest = getJSON(url, json => {
                 const posts: Post[] = [];
 
                 for(const result of json) {
@@ -190,6 +191,7 @@ export default class Danbooru extends Site {
                 send(result.posts);
                 complete(page, result.endOfResults);
             } catch(err) {
+                throw err;
                 error(err);
             }
             return;
@@ -202,6 +204,7 @@ export default class Danbooru extends Site {
             tagsInfo = await getJsonPromise(`https://danbooru.donmai.us/tags.json?search[name_comma]=${allTaxedTags.join(",")}`) as { name: string, post_count: number }[];
         }
         catch (err) {
+            throw err;
             error(err);
             return;
         }
@@ -257,6 +260,7 @@ export default class Danbooru extends Site {
                 }
             }
             catch(err) {
+                throw err;
                 error(err);
                 return;
             }

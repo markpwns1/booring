@@ -6,7 +6,8 @@
     "start": "node server.bundle.js",
     "build:doc": "npx typedoc --plugin typedoc-plugin-rename-defaults",
     "build:client": "webpack --config client.webpack.config.js",
-    "build:server": "webpack --config server.webpack.config.js"
+    "build:server": "webpack --config server.webpack.config.js",
+    "build:mobile": "webpack --config mobile.webpack.config.js"
   },
   "repository": {
     "type": "git",

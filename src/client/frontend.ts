@@ -390,7 +390,10 @@ export default class Frontend {
                     this.$btnCancelSearch.hide();
                 }
             },
-            error => console.error(error)
+            // error => console.error(error)
+            error => {
+                throw error;
+            }
         );
 
         this.hideSearchView();

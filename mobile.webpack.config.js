@@ -1,5 +1,6 @@
 const path = require('path');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const webpack = require("webpack");
 
 module.exports = {
     cache: {
@@ -14,16 +15,28 @@ module.exports = {
                 use: 'ts-loader',
                 exclude: /node_modules/,
             },
-        ],
+        ]
     },
     resolve: {
-        plugins: [ new TsconfigPathsPlugin() ],
+        plugins: [ 
+            new TsconfigPathsPlugin()
+        ],
         extensions: [ '.ts', '.js'],
     },
     output: {
         sourceMapFilename: "bundle.js.map",
         filename: 'bundle.js',
-        path: path.resolve(__dirname, 'public'),
+        path: path.resolve(__dirname, 'android'),
     },
-    mode: 'production',
+    plugins: [
+        new webpack.DefinePlugin({
+            "DEFINES": {
+                android: true
+            }
+        })
+    ],
+    mode: 'development',
+    optimization: {
+        minimize: false
+    },
 };

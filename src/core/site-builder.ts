@@ -4,6 +4,7 @@ import CachedAutocomplete from "./cached-autocomplete";
 import Post from "./post";
 import Site from "./site";
 import TagType from "./tag-type";
+import { GetJSONResult, getJSON } from "./get-json";
 import { getJsonPromise } from "./util";
 
 /**
@@ -188,7 +189,7 @@ export class SiteBuilder {
             send: (posts: Post[]) => void, 
             complete: (newPage: number, endOfResults: boolean) => void, 
             error: (error: any) => void
-        ): JQuery.jqXHR<any> => {
+        ): GetJSONResult => {
 
             if(options.safeSearchTag && safeSearch) {
                 tags = tags.concat(options.safeSearchTag);
@@ -197,7 +198,7 @@ export class SiteBuilder {
             const endpoint = encodeURI(url.replace("{tags}", tags.join(options.delimiter || " ")).replace("{page}", (page + (options.pageOffset || 0)).toString()));
             console.log("Searching... " + endpoint);
 
-            return $.getJSON(endpoint, json => {
+            return getJSON(endpoint, json => {
                 const posts: Post[] = [];
                 const processed = options.preprocessor!(json);
 
@@ -230,8 +231,8 @@ export class SiteBuilder {
                     public autocompleteEnabled = true;
                     public proxyHeaders = options.proxyHeaders || { };
         
-                    private activeAutocompleteRequest: JQuery.jqXHR | null = null;
-                    private activeSearchRequest: JQuery.jqXHR | null = null;
+                    private activeAutocompleteRequest: GetJSONResult | null = null;
+                    private activeSearchRequest: GetJSONResult | null = null;
         
                     public constructor() {
                         super(options.name, options.id);
@@ -296,7 +297,7 @@ export class SiteBuilder {
                     private tagCache: string = "";
 
                     private activeAutocompleteRequest: NodeJS.Timeout | null = null;
-                    private activeSearchRequest: JQuery.jqXHR | null = null;
+                    private activeSearchRequest: GetJSONResult | null = null;
         
                     public constructor() {
                         super(options.name, options.id);
@@ -354,7 +355,7 @@ export class SiteBuilder {
             public autocompleteEnabled = false;
             public proxyHeaders = options.proxyHeaders || { };
 
-            private activeSearchRequest: JQuery.jqXHR | null = null;
+            private activeSearchRequest: GetJSONResult | null = null;
 
             public constructor() {
                 super(options.name, options.id);
