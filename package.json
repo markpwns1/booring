@@ -7,8 +7,8 @@
     "build:doc": "npx typedoc --plugin typedoc-plugin-rename-defaults",
     "build:client": "webpack --config client.webpack.config.js",
     "build:server": "webpack --config server.webpack.config.js",
-    "build:deploy": "npm start build:server && npm start build:client",
-    "build:all": "npm start build:deploy && npm start build:doc"
+    "build:deploy": "npm run build:server && npm run build:client",
+    "build:all": "npm run build:deploy && npm run build:doc"
   },
   "repository": {
     "type": "git",
