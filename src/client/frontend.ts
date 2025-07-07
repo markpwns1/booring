@@ -409,30 +409,46 @@ export default class Frontend {
     public static addPost(post: Post): Promise<void> {
         return new Promise((resolve, reject) => {
             const postImg = new Image();
+            postImg.src = post.getThumbnail();
+            postImg.className = "result-container";
 
             postImg.onload = () => {
-                if(this.leftColumnHeight <= this.rightColumnHeight) {
-                    this.$resultsLeftColumn.append(postImg);
-                    this.leftColumnHeight += post.normalisedHeight();
+                let container: HTMLElement = postImg;
+
+                if (post.requiresVideoPlayer) {
+                    container = document.createElement("div");
+
+                    postImg.className = "result-thumbnail";
+                    container.className = "result-container";
+
+                    container.appendChild(postImg);
+
+                    const playIcon = new Image();
+                    playIcon.src = "./icon-video.png";
+                    playIcon.className = "result-thumbnail-video-overlay";
+                    playIcon.alt = "Play icon";
+                    playIcon.draggable = false;
+                    container.appendChild(playIcon);
                 }
-                else {
-                    this.$resultsRightColumn.append(postImg);
+
+                container.onclick = event => {
+                    event.stopPropagation();
+                    this.openPost(post);
+                };
+
+                if (this.leftColumnHeight <= this.rightColumnHeight) {
+                    this.$resultsLeftColumn.append(container);
+                    this.leftColumnHeight += post.normalisedHeight();
+                } else {
+                    this.$resultsRightColumn.append(container);
                     this.rightColumnHeight += post.normalisedHeight();
                 }
-    
+
                 this.posts.push(post);
                 resolve();
-            }
-
-            postImg.onclick = event => {
-                event.stopPropagation();
-                this.openPost(post);
-            }
+            };
 
             postImg.onerror = reject;
-
-            postImg.src = post.getThumbnail();
-            postImg.className = "results-image";
         });
     }
 
@@ -760,6 +776,11 @@ export default class Frontend {
             this.$autocompleteTags.hide();
         });
 
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const nsfw = urlParams.has("nsfw")? urlParams.get("nsfw") === "true" : false;
+        this.safeSearchEnabled = !nsfw;
+
         if(this.safeSearchEnabled) {
             const nsfwSites = this.$selectSearchSite.children(".nsfw-site");
             nsfwSites.attr("disabled", "");
@@ -817,10 +838,6 @@ export default class Frontend {
             this.setSafeSearchEnabled(!this.safeSearchEnabled);
         });
 
-        const urlParams = new URLSearchParams(window.location.search);
-
-        const nsfw = urlParams.has("nsfw")? urlParams.get("nsfw") === "true" : false;
-        this.safeSearchEnabled = !nsfw;
         this.$btnSafeSearch.text(this.safeSearchEnabled ? "Safe Search: ON" : "Safe Search: OFF");
         
         if(urlParams.has("domain") || urlParams.has("site")) {

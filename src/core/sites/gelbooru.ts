@@ -43,6 +43,8 @@ function postTransformFunction(json: any): Post {
         post.imageResolutions.splice(1, 0, proxify("gelbooru", json.sample_url));
     }
 
+    // post.imageResolutions = post.imageResolutions.filter(x => x.endsWith("."))
+
     post.fullWidth = json.width;
     post.fullHeight = json.height;
 
@@ -82,11 +84,12 @@ const Gelbooru = SiteBuilder.buildSite({
     proxyHeaders: {
         "Referrer": "https://gelbooru.com/"
     },
+    proxyEnvVariables: [ "GELBOORU_API_KEY", "GELBOORU_USER_ID" ],
     autocompleteModule: {
         url: proxify("json", "https://gelbooru.com/index.php?page=autocomplete2&type=tag_query&limit=10&term={tag}"),
         transformer: autocompleteTransformFunction
     },
-    searchUrl: proxify("json", "https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=20&pid={page}&tags={tags}"),
+    searchUrl: proxify("json-for/gelbooru", `https://gelbooru.com/index.php?&api_key={GELBOORU_API_KEY}&user_id={GELBOORU_USER_ID}&page=dapi&s=post&q=index&json=1&limit=20&pid={page}&tags={tags}`),
     safeSearchTag: "rating:general",
     searchPreprocessor: (json: any) => json.post || [],
     searchTransformer: postTransformFunction

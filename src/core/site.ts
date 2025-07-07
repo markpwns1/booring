@@ -63,6 +63,14 @@ export default class Site {
      */
     public proxyHeaders: { [key: string]: string } = { }
 
+    /**
+     * A list of environment variable names that will be substituted for their value if 
+     * encountered in a proxy query surrounded by curly braces. For example, including
+     * "GELBOORU_API_KEY" in this array will replace all instances of "{GELBOORU_API_KEY}"
+     * in a proxy URL with the value of the environment variable "GELBOORU_API_KEY"
+     */
+    public proxyEnvVariables: string[] = [ ]
+
     constructor(name: string, id: string) {
         this.name = name;
         this.id = id;

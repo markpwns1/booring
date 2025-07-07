@@ -148,7 +148,8 @@ select option {
     flex: 50%;
 }
 
-.results-image {
+.result-container {
+    position: relative;
     width: 100%;
     padding: 0;
     margin: 0;
@@ -157,6 +158,34 @@ select option {
     border-left: 1px solid black;
     margin: auto;
     cursor: pointer;
+}
+
+.result-thumbnail {
+    width: 100%;
+    display: block;
+}
+
+.result-thumbnail-video-overlay {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	width: 30px;
+	height: 30px;
+	pointer-events: none;
+	opacity: 0.75;
+}
+
+.play-icon {
+    content: "";
+    background: url('./icon-video.png') no-repeat center center;
+    background-size: contain;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px; /* adjust as needed */
+    height: 40px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
 #results-footer {
@@ -552,7 +581,7 @@ code {
     #btn-close-post {
         filter: none;
         top: unset;
-        bottom: 10px;
+        bottom: 50px;
     }
 
     #header {

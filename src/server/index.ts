@@ -26,6 +26,10 @@ function log(type: string, msg: string) {
     console.log(`${moment().format("YYYY-MM-DD hh:mm:ss")} [${type}] ${msg}`)
 }
 
+function replaceAll(str: string, find: string, replace: string): string {
+    return str.replace(new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replace);
+}
+
 function getData(url: string, res: express.Response, headers: { [key: string]: string }) {
     axios.get(url, {
         responseType: 'stream',
@@ -42,6 +46,26 @@ function getData(url: string, res: express.Response, headers: { [key: string]: s
     });
 }
 
+function proxySitePreprocess(site: string, destURL: string): { url: string, headers: { [key: string]: string} } {
+    let result = { 
+        headers: { },
+        url: destURL
+    };
+
+    const foundSite = Site.find(site || "");
+    if(foundSite) {
+        result.headers = foundSite.proxyHeaders;
+
+        let url = destURL;
+        for(const variable of foundSite.proxyEnvVariables)
+            url = replaceAll(url, "%7B" + variable + "%7D", process.env[variable] ?? "undefined");
+
+        result.url = url;
+    }
+
+    return result;
+}
+
 app.use(express.static(__dirname + '/public'));
 app.use((req, res, next) => {
     log("request", req.url);
@@ -50,6 +74,21 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/resources/index.html')
+});
+
+app.get("/proxy/json-for/:site/*", (req, res) => {
+    const index = 17 + req.params.site.length;
+    const url = req.url.substring(index);
+
+    const processed = proxySitePreprocess(req.params.site, url);
+
+    fetch(processed.url, { headers: processed.headers })
+        .then(response => response.json())
+        .then(json => res.json(json))
+        .catch(err => {
+            res.sendStatus(500);
+            log("error", err)
+        });
 });
 
 app.get("/proxy/json/*", (req, res) => {
@@ -64,15 +103,12 @@ app.get("/proxy/json/*", (req, res) => {
 });
 
 app.get("/proxy/:site/*", (req, res) => {
-    let headers: { [key: string]: string } = { };
-    if(req.params.site != "generic") {
-        const site = Site.find(req.params.site || "");
-        if(site) headers = site.proxyHeaders;
-    }
-
     const index = 8 + req.params.site.length;
     const url = req.url.substring(index);
-    getData(url, res, headers);
+
+    const processed = proxySitePreprocess(req.params.site, url);
+
+    getData(processed.url, res, processed.headers);
 });
 
 function fillTemplate(template: string, dict: { [key: string]: string }): string {

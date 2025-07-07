@@ -58,6 +58,8 @@ export interface SiteTemplateOptions {
     isPorn: boolean;
     /** See `Site.proxyHeaders` */
     proxyHeaders?: { [key: string]: string };
+    /** See `Site.proxyEnvVariables` */
+    proxyEnvVariables?: string[];
     /** The autocomplete module to use, if any */
     autocompleteModule?: SiteNetworkAutocompleteModule | SiteCachedAutocompleteModule;
     /** 
@@ -229,6 +231,7 @@ export class SiteBuilder {
                     public isPorn = options.isPorn;
                     public autocompleteEnabled = true;
                     public proxyHeaders = options.proxyHeaders || { };
+                    public proxyEnvVariables = options.proxyEnvVariables || [ ];
         
                     private activeAutocompleteRequest: JQuery.jqXHR | null = null;
                     private activeSearchRequest: JQuery.jqXHR | null = null;
@@ -292,6 +295,7 @@ export class SiteBuilder {
                     public isPorn = options.isPorn;
                     public autocompleteEnabled = false;
                     public proxyHeaders = options.proxyHeaders || { };
+                    public proxyEnvVariables = options.proxyEnvVariables || [ ];
         
                     private tagCache: string = "";
 
@@ -353,6 +357,7 @@ export class SiteBuilder {
             public isPorn = options.isPorn;
             public autocompleteEnabled = false;
             public proxyHeaders = options.proxyHeaders || { };
+            public proxyEnvVariables = options.proxyEnvVariables || [ ];
 
             private activeSearchRequest: JQuery.jqXHR | null = null;
 

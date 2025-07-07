@@ -1,3 +1,4 @@
 *.LICENSE.txt
 node_modules
 *.map
+*.env
