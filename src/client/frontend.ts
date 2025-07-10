@@ -367,7 +367,7 @@ export default class Frontend {
         };
 
         Site.current.search([ ...this.searchTags ], this.currentPage, this.safeSearchEnabled && !selectPost,
-            async (posts) => {
+            async posts => {
                 await Promise.all(posts.map(this.addPost.bind(this)));
                 if(selectPost && this.posts.length > 0) {
                     this.openPost(this.posts[0]);
@@ -386,11 +386,19 @@ export default class Frontend {
                 else {
                     this.$resultsFooterText.text("");
                     this.$btnFooterSearch.hide();
+                    this.$btnLoadMore.text("Show more...");
                     this.$btnLoadMore.show();
                     this.$btnCancelSearch.hide();
                 }
             },
-            error => console.error(error)
+            error => {
+                this.$resultsFooterText.html("An error occurred.<br><br>Check developer console for details");
+                this.$btnFooterSearch.hide();
+                this.$btnLoadMore.text("Try again...");
+                this.$btnLoadMore.show();
+                this.$btnCancelSearch.hide();
+                console.error(error);
+            }
         );
 
         this.hideSearchView();

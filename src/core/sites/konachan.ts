@@ -50,7 +50,8 @@ const Konachan = SiteBuilder.buildSite({
     id: "konachan",
     isPorn: false,
     proxyHeaders: {
-        "Referrer": "https://konachan.com/"
+        "Referrer": "https://konachan.com/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0"
     },
     autocompleteModule: {
         summaryUrl: proxify("json", "https://konachan.com/tag/summary.json"),
