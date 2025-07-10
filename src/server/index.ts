@@ -4,6 +4,8 @@ import { OutgoingHttpHeaders } from 'http';
 import * as https from 'https';
 import * as fs from 'fs';
 import fetch from "node-fetch";
+import * as nodeFetch from "node-fetch";
+import { Request, Response } from 'express';
 import * as moment from "moment";
 
 import registerAll from '@booring/site-registry';
@@ -66,6 +68,29 @@ function proxySitePreprocess(site: string, destURL: string): { url: string, head
     return result;
 }
 
+async function fetchJSON(res: Response, url: string, headers: { [key: string]: string}) {
+    let responseText: string;
+    try {
+        const response = await fetch(url, { headers: headers });
+        responseText = await response.text();
+    }
+    catch (err: any) {
+        res.sendStatus(500);
+        log("error", err);
+        return;
+    }
+    
+    try {
+        const json = JSON.parse(responseText);
+        res.json(json);
+    }
+    catch (err: any) {
+        res.sendStatus(500);
+        log("error", err);
+        log("error response", responseText);
+    }
+}
+
 app.use(express.static(__dirname + '/public'));
 app.use((req, res, next) => {
     log("request", req.url);
@@ -82,24 +107,12 @@ app.get("/proxy/json-for/:site/*", (req, res) => {
 
     const processed = proxySitePreprocess(req.params.site, url);
 
-    fetch(processed.url, { headers: processed.headers })
-        .then(response => response.json())
-        .then(json => res.json(json))
-        .catch(err => {
-            res.sendStatus(500);
-            log("error", err)
-        });
+    fetchJSON(res, processed.url, processed.headers);
 });
 
-app.get("/proxy/json/*", (req, res) => {
+app.get("/proxy/json/*", async (req, res) => {
     const url = req.url.substring(12);
-    fetch(url)
-        .then(response => response.json())
-        .then(json => res.json(json))
-        .catch(err => {
-            res.sendStatus(500);
-            log("error", err)
-        });
+    fetchJSON(res, url, {});
 });
 
 app.get("/proxy/:site/*", (req, res) => {
